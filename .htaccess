@@ -1,0 +1,10 @@
+Options -Indexes
+RewriteEngine On
+
+# Bloquear acceso directo a archivos sensibles
+RewriteRule ^(config|includes|modules)/ - [F,L]
+
+# Redirigir todo lo que no sea un archivo real (imagen/css) al index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?ruta=$1 [L,QSA]

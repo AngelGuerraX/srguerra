@@ -1,0 +1,55 @@
+[2026-01-29 02:09:41] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 02:09:41] 1. Conexión BD heredada correctamente.
+[2026-01-29 02:09:41] 2. Empresa ID: 1
+[2026-01-29 02:09:41] 3. Procesando Pedido ID: 820982911946154508
+[2026-01-29 02:09:41] ERROR SQL: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'where clause'
+[2026-01-29 02:10:57] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 02:10:57] 1. Conexión BD heredada correctamente.
+[2026-01-29 02:10:57] 2. Empresa ID: 1
+[2026-01-29 02:10:57] ERROR: JSON vacío o sin ID.
+[2026-01-29 02:11:06] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 02:11:06] 1. Conexión BD heredada correctamente.
+[2026-01-29 02:11:06] 2. Empresa ID: 1
+[2026-01-29 02:11:06] ERROR: JSON vacío o sin ID.
+[2026-01-29 02:11:16] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 02:11:16] 1. Conexión BD heredada correctamente.
+[2026-01-29 02:11:16] 2. Empresa ID: 1
+[2026-01-29 02:11:16] 3. Procesando Pedido ID: 820982911946154508
+[2026-01-29 02:11:16] ERROR SQL: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'where clause'
+[2026-01-29 02:11:49] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 02:11:49] 1. Conexión BD heredada correctamente.
+[2026-01-29 02:11:49] 2. Empresa ID: 1
+[2026-01-29 02:11:49] ERROR: JSON vacío o sin ID.
+[2026-01-29 02:11:55] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 02:11:55] 1. Conexión BD heredada correctamente.
+[2026-01-29 02:11:55] 2. Empresa ID: 1
+[2026-01-29 02:11:55] 3. Procesando Pedido ID: 820982911946154508
+[2026-01-29 02:11:55] ERROR SQL: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'email' in 'where clause'
+[2026-01-29 02:15:45] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 02:15:45] 1. Conexión BD heredada correctamente.
+[2026-01-29 02:15:45] 2. Empresa ID: 1
+[2026-01-29 02:15:45] 3. Procesando Pedido ID: 820982911946154508
+[2026-01-29 02:15:45]    -> Cliente nuevo creado (ID: 2)
+[2026-01-29 02:15:45]    -> Pedido creado (ID Interno: 3)
+[2026-01-29 02:15:45] ¡ÉXITO TOTAL!
+[2026-01-29 02:17:12] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 02:17:12] 1. Conexión BD heredada correctamente.
+[2026-01-29 02:17:12] 2. Empresa ID: 1
+[2026-01-29 02:17:12] 3. Procesando Pedido ID: 6823719502070
+[2026-01-29 02:17:12]    -> Cliente nuevo creado (ID: 3)
+[2026-01-29 02:17:12]    -> Pedido creado (ID Interno: 4)
+[2026-01-29 02:17:12] ¡ÉXITO TOTAL!
+[2026-01-29 04:21:08] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 04:21:08] 1. Conexión BD heredada correctamente.
+[2026-01-29 04:21:08] 2. Empresa ID: 1
+[2026-01-29 04:21:08] 3. Procesando Pedido ID: 6823831044342
+[2026-01-29 04:21:08]    -> Cliente existente (ID: 3)
+[2026-01-29 04:21:08]    -> Pedido creado (ID Interno: 6)
+[2026-01-29 04:21:08] ¡ÉXITO TOTAL!
+[2026-01-29 05:03:05] === NUEVA PETICIÓN SHOPIFY RECIBIDA VÍA ROUTER ===
+[2026-01-29 05:03:05] 1. Conexión BD heredada correctamente.
+[2026-01-29 05:03:05] 2. Empresa ID: 1
+[2026-01-29 05:03:05] 3. Procesando Pedido ID: 6823866859766
+[2026-01-29 05:03:05]    -> Cliente nuevo creado (ID: 1)
+[2026-01-29 05:03:05]    -> Pedido creado (ID Interno: 1)
+[2026-01-29 05:03:05] ¡ÉXITO TOTAL!

@@ -1,0 +1,15 @@
+# Archivos de configuración con contraseñas
+
+
+# Carpetas de subidas (imágenes pesadas)
+uploads/
+assets/img/
+
+# Archivos del sistema operativo o editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs de errores
+*.log
