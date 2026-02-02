@@ -41,11 +41,13 @@ $almacenes = $stmt->fetchAll();
                         <button class="btn btn-sm btn-outline-light border-0" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-ellipsis-v"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-dark">
-                            <li><a class="dropdown-item" href="index.php?ruta=almacenes/ver&id=<?php echo $a['id']; ?>"><i class="fas fa-eye me-2"></i> Ver Inventario</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i> Desactivar</a></li>
-                        </ul>
+                       <ul class="dropdown-menu dropdown-menu-dark">
+    <li><a class="dropdown-item" href="index.php?ruta=almacenes/ver&id=<?php echo $a['id']; ?>"><i class="fas fa-eye me-2"></i> Ver Inventario</a></li>
+    
+    <li><a class="dropdown-item text-warning" href="index.php?ruta=almacenes/editar&id=<?php echo $a['id']; ?>"><i class="fas fa-edit me-2"></i> Editar</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i> Desactivar</a></li>
+</ul>
                     </div>
                 </div>
 

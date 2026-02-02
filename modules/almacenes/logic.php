@@ -19,4 +19,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit();
     }
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] == 'actualizar_almacen') {
+    
+    $id = $_POST['id'];
+    $nombre = $_POST['nombre'];
+    $ubicacion = $_POST['ubicacion'] ?? ''; // Usa '' si está vacío
+    $costo = $_POST['costo_empaque'] ?? 0;
+    $empresa_id = $_SESSION['empresa_id'];
+
+    if (empty($nombre)) die("El nombre es obligatorio");
+
+    try {
+        $sql = "UPDATE almacenes 
+                SET nombre = ?, ubicacion = ?, costo_empaque = ? 
+                WHERE id = ? AND empresa_id = ?";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$nombre, $ubicacion, $costo, $id, $empresa_id]);
+
+        header("Location: index.php?ruta=almacenes&msg=actualizado");
+        exit();
+
+    } catch (PDOException $e) {
+        die("Error al actualizar: " . $e->getMessage());
+    }
+}
 ?>

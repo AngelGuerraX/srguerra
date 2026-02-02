@@ -70,4 +70,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             die("Error al guardar producto: " . $e->getMessage());
         }
     }
+} 
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] == 'actualizar_stock_almacenes') {
+    
+    // Validar Token CSRF
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die("Error de seguridad: Token inválido");
+    }
+
+    $producto_id = (int)$_POST['producto_id'];
+    $cantidades  = $_POST['cantidades']; // Array [almacen_id => cantidad]
+    $empresa_id  = $_SESSION['empresa_id'];
+
+    try {
+        $pdo->beginTransaction();
+
+        $nuevo_stock_global = 0;
+
+        foreach ($cantidades as $almacen_id => $cantidad) {
+            $cantidad = (int)$cantidad; // Asegurar número
+            if ($cantidad < 0) $cantidad = 0; // Evitar negativos
+
+            // 1. Actualizar o Insertar en tabla inventario_almacen
+            // Usamos ON DUPLICATE KEY UPDATE para manejar ambos casos
+            $sql = "INSERT INTO inventario_almacen (producto_id, almacen_id, cantidad) 
+                    VALUES (?, ?, ?) 
+                    ON DUPLICATE KEY UPDATE cantidad = ?";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$producto_id, $almacen_id, $cantidad, $cantidad]);
+
+            $nuevo_stock_global += $cantidad;
+        }
+
+        // 2. Actualizar el stock global en la tabla PRODUCTOS
+        $stmt_prod = $pdo->prepare("UPDATE productos SET stock_actual = ? WHERE id = ? AND empresa_id = ?");
+        $stmt_prod->execute([$nuevo_stock_global, $producto_id, $empresa_id]);
+
+        $pdo->commit();
+
+        // Redirigir
+        header("Location: index.php?ruta=inventario/editar&id=$producto_id&msg=stock_actualizado");
+        exit();
+
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        die("Error al actualizar inventario: " . $e->getMessage());
+    }
 }

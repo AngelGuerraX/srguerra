@@ -1,6 +1,6 @@
 <?php
 // modules/inventario/editar.php
-// FICHA DEL PRODUCTO + RASTREADOR TOTAL
+// FICHA DEL PRODUCTO + EDICIÓN DE STOCK MULTI-ALMACÉN + RASTREADOR
 
 $id = (int)$_GET['id'];
 $empresa_id = $_SESSION['empresa_id'];
@@ -12,13 +12,15 @@ $prod = $stmt->fetch();
 
 if(!$prod) die("Producto no encontrado");
 
-// 2. STOCK ACTUAL POR ALMACÉN
-$sql_stock = "SELECT a.nombre, i.cantidad 
-              FROM inventario_almacen i 
-              JOIN almacenes a ON i.almacen_id = a.id 
-              WHERE i.producto_id = ?";
+// 2. STOCK ACTUAL POR ALMACÉN (CORREGIDO PARA EDITAR)
+// Usamos LEFT JOIN para traer TODOS los almacenes activos, aunque no tengan stock registrado (saldrá 0)
+$sql_stock = "SELECT a.id as almacen_id, a.nombre, COALESCE(i.cantidad, 0) as cantidad 
+              FROM almacenes a 
+              LEFT JOIN inventario_almacen i ON a.id = i.almacen_id AND i.producto_id = ?
+              WHERE a.empresa_id = ? AND a.activo = 1
+              ORDER BY a.nombre ASC";
 $stmt_s = $pdo->prepare($sql_stock);
-$stmt_s->execute([$id]);
+$stmt_s->execute([$id, $empresa_id]);
 $stocks = $stmt_s->fetchAll();
 
 // ---------------------------------------------------------
@@ -35,7 +37,7 @@ $sql_f_ini = $fecha_inicio . " 00:00:00";
 $sql_f_fin = $fecha_fin . " 23:59:59";
 
 // ---------------------------------------------------------
-// 4. CONSULTA DE MOVIMIENTOS
+// 4. CONSULTA DE MOVIMIENTOS (HISTORIAL)
 // ---------------------------------------------------------
 $sql_mov = "SELECT p.numero_orden, p.fecha_creacion, p.estado_interno, p.id as pedido_id,
                    t.nombre as trans_nombre,
@@ -86,11 +88,8 @@ $lista_trans = $pdo->query("SELECT id, nombre FROM transportadoras WHERE empresa
 // Función URL para mantener filtros
 function url_prod($nuevo_estado=null, $nuevo_trans=null) {
     global $id, $fecha_inicio, $fecha_fin, $filtro_estado, $filtro_trans;
-    
-    // Si pasamos 'all', reseteamos esa variable. Si es null, mantenemos la actual.
     $e = ($nuevo_estado === 'all') ? '' : ($nuevo_estado ?? $filtro_estado);
     $t = ($nuevo_trans === 'all') ? 0 : ($nuevo_trans ?? $filtro_trans);
-    
     return "index.php?ruta=inventario/editar&id=$id&f_ini=$fecha_inicio&f_fin=$fecha_fin&estado=$e&transporte=$t";
 }
 ?>
@@ -106,6 +105,7 @@ function url_prod($nuevo_estado=null, $nuevo_trans=null) {
 <div class="row g-4">
     
     <div class="col-lg-4">
+        
         <div class="card-glass p-4 mb-4">
             <h5 class="text-white fw-bold mb-3"><i class="fas fa-edit me-2"></i> Datos Básicos</h5>
             <form action="index.php?ruta=inventario/logic" method="POST">
@@ -129,23 +129,49 @@ function url_prod($nuevo_estado=null, $nuevo_trans=null) {
                     </div>
                 </div>
 
-                <button class="btn btn-primary w-100 btn-sm">Guardar Cambios</button>
+                <button class="btn btn-primary w-100 btn-sm fw-bold">Guardar Datos</button>
             </form>
         </div>
 
         <div class="card-glass p-4">
-            <h5 class="text-white fw-bold mb-3"><i class="fas fa-cubes me-2"></i> Stock Actual</h5>
-            <ul class="list-group list-group-flush">
-                <?php foreach($stocks as $s): ?>
-                <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary">
-                    <span><?php echo $s['nombre']; ?></span>
-                    <span class="badge bg-secondary rounded-pill"><?php echo $s['cantidad']; ?> u.</span>
-                </li>
-                <?php endforeach; ?>
-                <li class="list-group-item bg-transparent border-0 pt-3 text-center">
-                    <small class="text-muted">Total Global: <b class="text-neon"><?php echo $prod['stock_actual']; ?></b></small>
-                </li>
-            </ul>
+            <h5 class="text-white fw-bold mb-3"><i class="fas fa-boxes me-2"></i> Inventario por Almacén</h5>
+            
+            <form action="index.php?ruta=inventario/logic" method="POST">
+                <input type="hidden" name="action" value="actualizar_stock_almacenes">
+                <input type="hidden" name="producto_id" value="<?php echo $prod['id']; ?>">
+                <input type="hidden" name="csrf_token" value="<?php echo generar_csrf_token(); ?>">
+
+                <div class="vstack gap-2 mb-3">
+                    <?php 
+                    $total_calculado = 0;
+                    if(empty($stocks)): ?>
+                        <div class="text-center text-muted small py-2">No hay almacenes creados. <a href="index.php?ruta=almacenes/nuevo">Crea uno aquí</a>.</div>
+                    <?php else:
+                        foreach($stocks as $s): 
+                            $total_calculado += $s['cantidad'];
+                        ?>
+                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2">
+                            <label class="text-white small m-0" style="width: 60%;"><?php echo $s['nombre']; ?></label>
+                            <input type="number" 
+                                   name="cantidades[<?php echo $s['almacen_id']; ?>]" 
+                                   value="<?php echo $s['cantidad']; ?>" 
+                                   class="form-control form-control-sm bg-black text-neon text-end border-secondary" 
+                                   style="width: 35%;"
+                                   min="0">
+                        </div>
+                        <?php endforeach; 
+                    endif; ?>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3 pt-2">
+                    <small class="text-muted">Total Global:</small>
+                    <span class="text-white fw-bold fs-5"><?php echo $total_calculado; ?></span>
+                </div>
+
+                <button type="submit" class="btn btn-warning fw-bold w-100 btn-sm text-dark">
+                    <i class="fas fa-sync-alt me-2"></i> Actualizar Stock
+                </button>
+            </form>
         </div>
     </div>
 

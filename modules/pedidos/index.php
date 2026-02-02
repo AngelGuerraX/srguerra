@@ -1,15 +1,15 @@
 <?php
 // modules/pedidos/index.php
-// LISTADO CON FILTROS AVANZADOS Y SELECCIÓN PARA EXPORTAR
+// LISTADO CON FILTROS, PAGINACIÓN, EXPORTACIÓN Y BORRADO MASIVO
 
 $empresa_id = $_SESSION['empresa_id'];
 
-// --- 1. CAPTURAR FILTROS ---
+// --- 1. CAPTURAR FILTROS (Tu código original) ---
 $fecha_inicio = isset($_GET['f_ini']) ? $_GET['f_ini'] : date('Y-m-01');
 $fecha_fin    = isset($_GET['f_fin']) ? $_GET['f_fin'] : date('Y-m-t');
 $filtro_estado = isset($_GET['estado']) ? $_GET['estado'] : '';
 $filtro_trans  = isset($_GET['transporte']) ? (int)$_GET['transporte'] : 0;
-$busqueda      = isset($_GET['q']) ? trim($_GET['q']) : ''; // Nuevo: Buscador texto
+$busqueda      = isset($_GET['q']) ? trim($_GET['q']) : '';
 
 $sql_f_ini = $fecha_inicio . " 00:00:00";
 $sql_f_fin = $fecha_fin . " 23:59:59";
@@ -43,7 +43,6 @@ if ($filtro_trans > 0) {
     $sql .= " AND p.transportadora_id = ?";
     $params[] = $filtro_trans;
 }
-// Nuevo: Filtro de Búsqueda General
 if (!empty($busqueda)) {
     $sql .= " AND (c.nombre LIKE ? OR c.telefono LIKE ? OR p.numero_orden LIKE ?)";
     $params[] = "%$busqueda%";
@@ -64,7 +63,7 @@ $total_paginas = ceil($total_pedidos / $limite);
 // Lista transportadoras para el select
 $lista_trans = $pdo->query("SELECT id, nombre FROM transportadoras WHERE empresa_id = $empresa_id AND activo = 1")->fetchAll();
 
-// Función auxiliar URL
+// Función auxiliar URL para mantener filtros al paginar
 function url_filtro($nuevo_estado = null, $nuevo_trans = null, $reset = false) {
     global $fecha_inicio, $fecha_fin, $filtro_estado, $filtro_trans, $busqueda;
     if ($reset) return "index.php?ruta=pedidos";
@@ -79,15 +78,27 @@ function url_filtro($nuevo_estado = null, $nuevo_trans = null, $reset = false) {
         <span class="h-label">LOGÍSTICA</span>
         <h2 class="fw-bold text-white">Gestión de Pedidos</h2>
     </div>
+    
     <div class="d-flex gap-2">
-        <button type="button" onclick="document.getElementById('formExportar').submit();" class="btn btn-success rounded-pill px-4 shadow">
-            <i class="fas fa-file-excel me-2"></i> Exportar Selección
+        <button type="button" onclick="submitAccion('eliminar')" class="btn btn-danger rounded-pill px-3 shadow">
+            <i class="fas fa-trash-alt me-2"></i> Borrar
         </button>
+ 
+        <button type="button" onclick="submitAccion('exportar')" class="btn btn-success rounded-pill px-3 shadow">
+            <i class="fas fa-file-excel me-2"></i> Exportar
+        </button>
+
         <a href="index.php?ruta=pedidos/nuevo" class="btn btn-primary rounded-pill px-4 btn-glow">
             <i class="fas fa-plus me-2"></i> Crear Pedido
         </a>
     </div>
 </div>
+
+<?php if (isset($_GET['mensaje']) && $_GET['mensaje'] == 'eliminados'): ?>
+    <div class="alert alert-success border-0 bg-success text-white bg-opacity-75 fade show mb-3">
+        <i class="fas fa-check-circle me-2"></i> Pedidos eliminados correctamente.
+    </div>
+<?php endif; ?>
 
 <div class="card-glass p-3 mb-3">
     <form action="index.php" method="GET" class="row g-2 align-items-end">
@@ -115,8 +126,10 @@ function url_filtro($nuevo_estado = null, $nuevo_trans = null, $reset = false) {
             <select name="estado" class="form-select form-select-sm bg-dark text-white border-secondary">
                 <option value="">Todos</option>
                 <option value="Nuevo" <?php echo $filtro_estado=='Nuevo'?'selected':''; ?>>Nuevo</option>
+                <option value="Confirmado" <?php echo $filtro_estado=='Confirmado'?'selected':''; ?>>Confirmado</option>
                 <option value="En Ruta" <?php echo $filtro_estado=='En Ruta'?'selected':''; ?>>En Ruta</option>
                 <option value="Entregado" <?php echo $filtro_estado=='Entregado'?'selected':''; ?>>Entregado</option>
+                <option value="Devuelto" <?php echo $filtro_estado=='Devuelto'?'selected':''; ?>>Devuelto</option>
                 <option value="Cancelado" <?php echo $filtro_estado=='Cancelado'?'selected':''; ?>>Cancelado</option>
             </select>
         </div>
@@ -137,7 +150,7 @@ function url_filtro($nuevo_estado = null, $nuevo_trans = null, $reset = false) {
     </form>
 </div>
 
-<form id="formExportar" action="index.php?ruta=exportar-pedidos" method="POST" target="_blank">
+<form id="formMaestro" method="POST">
     <div class="card-glass p-0 overflow-hidden">
         <div class="table-responsive">
             <table class="table table-dark-custom align-middle mb-0">
@@ -174,9 +187,11 @@ function url_filtro($nuevo_estado = null, $nuevo_trans = null, $reset = false) {
                                     <?php 
                                         $badge = 'bg-secondary';
                                         if($p['estado_interno'] == 'Nuevo') $badge = 'bg-primary';
+                                        if($p['estado_interno'] == 'Confirmado') $badge = 'bg-info text-dark';
                                         if($p['estado_interno'] == 'En Ruta') $badge = 'bg-warning text-dark';
                                         if($p['estado_interno'] == 'Entregado') $badge = 'bg-success';
-                                        if($p['estado_interno'] == 'Cancelado') $badge = 'bg-danger';
+                                        if($p['estado_interno'] == 'Devuelto') $badge = 'bg-danger';
+                                        if($p['estado_interno'] == 'Cancelado') $badge = 'bg-dark border border-secondary';
                                     ?>
                                     <span class="badge rounded-pill <?php echo $badge; ?> px-3">
                                         <?php echo $p['estado_interno']; ?>
@@ -226,11 +241,51 @@ function url_filtro($nuevo_estado = null, $nuevo_trans = null, $reset = false) {
 <?php endif; ?>
 
 <script>
-// Script para seleccionar todos los checkboxes
+// Marcar/Desmarcar todos
 function toggleAll(source) {
     checkboxes = document.getElementsByClassName('check-item');
     for(var i=0, n=checkboxes.length;i<n;i++) {
         checkboxes[i].checked = source.checked;
+    }
+}
+
+// Función Maestra para Exportar o Borrar
+function submitAccion(tipo) {
+    var form = document.getElementById('formMaestro');
+    var checkboxes = document.querySelectorAll('.check-item:checked');
+    
+    if (checkboxes.length === 0) {
+        alert("Primero selecciona al menos un pedido de la lista.");
+        return;
+    }
+
+    if (tipo === 'exportar') {
+        // Configurar para Excel
+        form.action = "index.php?ruta=exportar-pedidos";
+        form.target = "_blank"; // Abrir en nueva pestaña
+        
+        // Quitar input de acción si existía
+        var oldInput = document.getElementById('hiddenAction');
+        if(oldInput) oldInput.remove();
+        
+        form.submit();
+        
+    } else if (tipo === 'eliminar') {
+        if(confirm("⚠️ ¿ESTÁS SEGURO?\n\nVas a eliminar " + checkboxes.length + " pedidos permanentemente.\nEsta acción no se puede deshacer.")) {
+            // Configurar para Lógica de Borrado
+            form.action = "index.php?ruta=pedidos/logic";
+            form.target = "_self"; // En la misma pestaña
+            
+            // Agregar input oculto para que logic.php sepa qué hacer
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'action';
+            input.value = 'eliminar_masivo';
+            input.id = 'hiddenAction';
+            form.appendChild(input);
+            
+            form.submit();
+        }
     }
 }
 </script>

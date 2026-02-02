@@ -4,12 +4,11 @@ $empresa_id = $_SESSION['empresa_id'];
 
 // 1. OBTENER LISTAS PARA LOS DROPDOWNS
 $almacenes = $pdo->query("SELECT * FROM almacenes WHERE empresa_id = $empresa_id AND activo = 1")->fetchAll();
-$transportadoras = $pdo->query("SELECT * FROM transportadoras WHERE activo = 1")->fetchAll();
+$transportadoras = $pdo->query("SELECT * FROM transportadoras WHERE activo = 1 AND empresa_id = $empresa_id")->fetchAll();
 $clientes = $pdo->query("SELECT * FROM clientes WHERE empresa_id = $empresa_id ORDER BY id DESC LIMIT 50")->fetchAll();
 $productos = $pdo->query("SELECT * FROM productos WHERE empresa_id = $empresa_id AND stock_actual > 0")->fetchAll();
 
-// 2. OBTENER EL MAPA DE STOCK POR ALMACÉN (La magia para JS)
-// Esto crea una lista de "quién tiene qué" para usarla en el script de abajo
+// 2. OBTENER EL MAPA DE STOCK POR ALMACÉN
 $stock_map = [];
 $q_stock = $pdo->prepare("SELECT producto_id, almacen_id, cantidad FROM inventario_almacen");
 $q_stock->execute();
@@ -60,20 +59,49 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
                         <label class="text-white small">Teléfono *</label>
                         <input type="text" name="cliente_telefono" id="cli_tel" class="form-control bg-dark text-white border-secondary" required placeholder="809-000-0000">
                     </div>
+                    
                     <div class="col-md-6">
                         <label class="text-white small">Provincia *</label>
                         <select name="cliente_provincia" id="cli_prov" class="form-select bg-dark text-white border-secondary" required onchange="actualizarCiudades()">
-                            <option value="">Seleccionar...</option>
-                            <option value="Santo Domingo">Santo Domingo</option>
+                            <option value="">Seleccionar Provincia...</option>
+                            <option value="Azua">Azua</option>
+                            <option value="Baoruco">Baoruco</option>
+                            <option value="Barahona">Barahona</option>
+                            <option value="Dajabón">Dajabón</option>
                             <option value="Distrito Nacional">Distrito Nacional</option>
-                            <option value="Santiago">Santiago</option>
+                            <option value="Duarte">Duarte</option>
+                            <option value="Elías Piña">Elías Piña</option>
+                            <option value="El Seibo">El Seibo</option>
+                            <option value="Espaillat">Espaillat</option>
+                            <option value="Hato Mayor">Hato Mayor</option>
+                            <option value="Hermanas Mirabal">Hermanas Mirabal</option>
+                            <option value="Independencia">Independencia</option>
                             <option value="La Altagracia">La Altagracia</option>
+                            <option value="La Romana">La Romana</option>
+                            <option value="La Vega">La Vega</option>
+                            <option value="María Trinidad Sánchez">María Trinidad Sánchez</option>
+                            <option value="Monseñor Nouel">Monseñor Nouel</option>
+                            <option value="Monte Cristi">Monte Cristi</option>
+                            <option value="Monte Plata">Monte Plata</option>
+                            <option value="Pedernales">Pedernales</option>
+                            <option value="Peravia">Peravia</option>
+                            <option value="Puerto Plata">Puerto Plata</option>
+                            <option value="Samaná">Samaná</option>
+                            <option value="San Cristóbal">San Cristóbal</option>
+                            <option value="San José de Ocoa">San José de Ocoa</option>
+                            <option value="San Juan">San Juan</option>
+                            <option value="San Pedro de Macorís">San Pedro de Macorís</option>
+                            <option value="Sánchez Ramírez">Sánchez Ramírez</option>
+                            <option value="Santiago">Santiago</option>
+                            <option value="Santiago Rodríguez">Santiago Rodríguez</option>
+                            <option value="Santo Domingo">Santo Domingo</option>
+                            <option value="Valverde">Valverde</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="text-white small">Ciudad/Municipio *</label>
                         <input type="hidden" name="cliente_ciudad_final" id="ciudad_final">
-                        <select id="select_ciudad" class="form-select bg-dark text-white border-secondary" onchange="fijarCiudad(this)">
+                        <select id="select_ciudad" class="form-select bg-dark text-white border-secondary" onchange="fijarCiudad(this)" required>
                             <option value="">Selecciona Provincia primero</option>
                         </select>
                     </div>
@@ -172,14 +200,106 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
     // 1. IMPORTAR EL MAPA DE STOCK DE PHP A JS
     const stockMap = <?php echo json_encode($stock_map); ?>;
 
-    // Función Principal: Cuando eliges producto, actualizamos los almacenes
+    // === BASE DE DATOS GEOGRÁFICA RD (COMPLETA) ===
+    const datosRD = {
+        "Azua": ["Azua de Compostela", "Estebanía", "Guayabal", "Las Charcas", "Las Yayas de Viajama", "Padre Las Casas", "Peralta", "Pueblo Viejo", "Sabana Yegua", "Tábara Arriba"],
+        "Baoruco": ["Neiba", "Galván", "Los Ríos", "Tamayo", "Villa Jaragua"],
+        "Barahona": ["Barahona", "Cabral", "El Peñón", "Enriquillo", "Fundación", "Jaquimeyes", "La Ciénaga", "Las Salinas", "Paraíso", "Polo", "Vicente Noble"],
+        "Dajabón": ["Dajabón", "El Pino", "Loma de Cabrera", "Partid,o", "Restauración"],
+        "Distrito Nacional": ["Distrito Nacional"],
+        "Duarte": ["San Francisco de Macorís", "Arenoso", "Castillo", "Eugenio María de Hostos", "Las Guáranas", "Pimentel", "Villa Riva"],
+        "El Seibo": ["El Seibo", "Miches"],
+        "Elías Piña": ["Comendador", "Bánica", "El Llano", "Hondo Valle", "Juan Santiago", "Pedro Santana"],
+        "Espaillat": ["Moca", "Cayetano Germosén", "Gaspar Hernández", "Jamao al Norte"],
+        "Hato Mayor": ["Hato Mayor del Rey", "El Valle", "Sabana de la Mar"],
+        "Hermanas Mirabal": ["Salcedo", "Tenares", "Villa Tapia"],
+        "Independencia": ["Jimaní", "Cristóbal", "Duvergé", "La Descubierta", "Mella", "Postrer Río"],
+        "La Altagracia": ["Higüey", "San Rafael del Yuma"],
+        "La Romana": ["La Romana", "Guaymate", "Villa Hermosa"],
+        "La Vega": ["La Vega", "Constanza", "Jarabacoa", "Jima Abajo"],
+        "María Trinidad Sánchez": ["Nagua", "Cabrera", "El Factor", "Río San Juan"],
+        "Monseñor Nouel": ["Bonao", "Maimón", "Piedra Blanca"],
+        "Monte Cristi": ["Monte Cristi", "Castañuelas", "Guayubín", "Las Matas de Santa Cruz", "Pepillo Salcedo", "Villa Vásquez"],
+        "Monte Plata": ["Monte Plata", "Bayaguana", "Peralvillo", "Sabana Grande de Boyá", "Yamasá"],
+        "Pedernales": ["Pedernales", "Oviedo"],
+        "Peravia": ["Baní", "Nizao"],
+        "Puerto Plata": ["Puerto Plata", "Altamira", "Guananico", "Imbert", "Los Hidalgos", "Luperón", "Sosúa", "Villa Isabela", "Villa Montellano"],
+        "Samaná": ["Samaná", "Las Terrenas", "Sánchez"],
+        "San Cristóbal": ["San Cristóbal", "Bajos de Haina", "Cambita Garabitos", "Los Cacaos", "Sabana Grande de Palenque", "San Gregorio de Nigua", "Villa Altagracia", "Yaguate"],
+        "San José de Ocoa": ["San José de Ocoa", "Rancho Arriba", "Sabana Larga"],
+        "San Juan": ["San Juan de la Maguana", "Bohechío", "El Cercado", "Juan de Herrera", "Las Matas de Farfán", "Vallejuelo"],
+        "San Pedro de Macorís": ["San Pedro de Macorís", "Consuelo", "Guayacanes", "Quisqueya", "Ramón Santana", "San José de los Llanos"],
+        "Sánchez Ramírez": ["Cotuí", "Cevicos", "Fantino", "La Mata"],
+        "Santiago": ["Santiago", "Bisonó", "Jánico", "Licey al Medio", "Puñal", "Sabana Iglesia", "San José de las Matas", "Tamboril", "Villa González"],
+        "Santiago Rodríguez": ["Sabaneta", "Los Almácigos", "Monción"],
+        "Santo Domingo": ["Santo Domingo Este", "Santo Domingo Oeste", "Santo Domingo Norte", "Boca Chica", "San Antonio de Guerra", "Los Alcarrizos", "Pedro Brand"],
+        "Valverde": ["Mao", "Esperanza", "Laguna Salada"]
+    };
+
+    // Función actualizada para usar los datos completos
+    function actualizarCiudades() {
+        const selectProvincia = document.getElementById('cli_prov');
+        const selectCiudad = document.getElementById('select_ciudad');
+        const provinciaSeleccionada = selectProvincia.value;
+
+        // Limpiar ciudades anteriores
+        selectCiudad.innerHTML = "<option value=''>Selecciona Ciudad...</option>";
+
+        if (provinciaSeleccionada && datosRD[provinciaSeleccionada]) {
+            const ciudades = datosRD[provinciaSeleccionada];
+            
+            // Ordenar alfabéticamente
+            ciudades.sort();
+
+            ciudades.forEach(ciudad => {
+                let opt = document.createElement('option');
+                opt.value = ciudad;
+                opt.innerHTML = ciudad;
+                selectCiudad.appendChild(opt);
+            });
+        }
+        
+        // Resetear valor hidden
+        document.getElementById('ciudad_final').value = "";
+    }
+
+    function fijarCiudad(select) {
+        document.getElementById('ciudad_final').value = select.value;
+    }
+
+    // Función de carga de cliente (modificada para seleccionar provincia/ciudad automáticamente si existen)
+    function cargarCliente(select) {
+        const opt = select.options[select.selectedIndex];
+        if (select.value !== "") {
+            document.getElementById('cli_nombre').value = opt.getAttribute('data-nombre');
+            document.getElementById('cli_tel').value = opt.getAttribute('data-tel');
+            document.getElementById('cli_dir').value = opt.getAttribute('data-dir');
+            
+            const prov = opt.getAttribute('data-prov');
+            const ciudad = opt.getAttribute('data-ciudad');
+
+            // Intentar setear provincia
+            const selectProv = document.getElementById('cli_prov');
+            selectProv.value = prov;
+            
+            // Si la provincia existe en el select, actualizar ciudades y luego seleccionar ciudad
+            if (selectProv.value === prov) {
+                actualizarCiudades();
+                const selectCiudad = document.getElementById('select_ciudad');
+                selectCiudad.value = ciudad;
+                fijarCiudad(selectCiudad);
+            }
+        }
+    }
+
+    // --- RESTO DE TU LÓGICA ORIGINAL ---
+
     function seleccionarProducto(select) {
         const opcion = select.options[select.selectedIndex];
         const precio = opcion.getAttribute('data-precio') || 0;
         const esManual = select.value == '0';
         const prodId = select.value;
 
-        // A. Mostrar/Ocultar input manual
         const inputManual = document.getElementById('input_nombre_manual');
         if (esManual) {
             inputManual.classList.remove('d-none');
@@ -190,11 +310,8 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
             if (opcion.getAttribute('data-nombre')) inputManual.value = opcion.getAttribute('data-nombre');
         }
 
-        // B. Poner Precio
         document.getElementById('precio_unit').value = precio;
         calcularTotal();
-
-        // C. ACTUALIZAR DROPDOWN DE ALMACENES CON STOCK
         actualizarStockVisual(prodId);
     }
 
@@ -202,7 +319,6 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
         const selectAlmacen = document.getElementById('almacen_select');
         const opciones = selectAlmacen.options;
 
-        // Si es producto manual, limpiamos los paréntesis y salimos
         if (prodId == '0' || prodId == '') {
             for (let i = 0; i < opciones.length; i++) {
                 let nombreOriginal = opciones[i].getAttribute('data-nombre');
@@ -212,31 +328,23 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
             return;
         }
 
-        // Si es un producto real, buscamos su stock en el Mapa JSON
-        const stockProducto = stockMap[prodId] || {}; // Objeto {id_almacen: cantidad}
+        const stockProducto = stockMap[prodId] || {}; 
 
         for (let i = 0; i < opciones.length; i++) {
             let almId = opciones[i].value;
             let nombreOriginal = opciones[i].getAttribute('data-nombre');
-
-            // Obtener cantidad (si no existe en el mapa, es 0)
             let cantidad = stockProducto[almId] || 0;
 
-            // Cambiar el texto
             if (cantidad > 0) {
                 opciones[i].text = `✅ ${nombreOriginal} (Disp: ${cantidad})`;
-                opciones[i].disabled = false; // Habilitar
+                opciones[i].disabled = false; 
                 opciones[i].classList.remove('text-muted');
             } else {
                 opciones[i].text = `❌ ${nombreOriginal} (Agotado)`;
-                // Opcional: Deshabilitar para que no lo elijan por error
-                // opciones[i].disabled = true; 
                 opciones[i].classList.add('text-muted');
             }
         }
     }
-
-    // ... (Resto de funciones JS: cargarCliente, calcularTotal, etc. siguen igual) ...
 
     function calcularTotal() {
         const cant = parseFloat(document.getElementById('cantidad').value) || 0;
@@ -256,44 +364,8 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
         document.getElementById('costo_empaque').value = costo;
     }
 
-    // Inicializar al cargar
     document.addEventListener('DOMContentLoaded', function() {
         calcularCostoEnvio();
         actualizarCostoEmpaque();
     });
-
-    // Lógica básica de ciudades (Simplificada para el ejemplo)
-    function actualizarCiudades() {
-        const provincia = document.getElementById('cli_prov').value;
-        const selectCiudad = document.getElementById('select_ciudad');
-        selectCiudad.innerHTML = ""; // Limpiar
-
-        let ciudades = [];
-        if (provincia === 'Santo Domingo') ciudades = ['Santo Domingo Este', 'Santo Domingo Norte', 'Santo Domingo Oeste'];
-        else if (provincia === 'Distrito Nacional') ciudades = ['Distrito Nacional'];
-        else ciudades = [provincia + ' (Centro)'];
-
-        ciudades.forEach(c => {
-            let opt = document.createElement('option');
-            opt.value = c;
-            opt.innerHTML = c;
-            selectCiudad.appendChild(opt);
-        });
-        fijarCiudad(selectCiudad);
-    }
-
-    function fijarCiudad(select) {
-        document.getElementById('ciudad_final').value = select.value;
-    }
-
-    function cargarCliente(select) {
-        const opt = select.options[select.selectedIndex];
-        if (select.value !== "") {
-            document.getElementById('cli_nombre').value = opt.getAttribute('data-nombre');
-            document.getElementById('cli_tel').value = opt.getAttribute('data-tel');
-            document.getElementById('cli_dir').value = opt.getAttribute('data-dir');
-            // Provincia y ciudad requieren lógica extra para autoseleccionarse, 
-            // por simplicidad lo dejamos manual o lo llenamos si coincide.
-        }
-    }
 </script>
