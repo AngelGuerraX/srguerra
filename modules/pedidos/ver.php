@@ -1,64 +1,4 @@
 <?php
-
-// 1. VALIDAR ID
-if (!isset($_GET['id'])) {
-    echo "<script>window.location='pedidos';</script>";
-    exit;
-}
-
-$pedido_id = $_GET['id'];
-$empresa_id = $_SESSION['empresa_id'];
-
-// 2. OBTENER DATOS DEL PEDIDO + CLIENTE + TRANSPORTADORA + ALMACEN
-$sql = "SELECT p.*, 
-               c.nombre as cli_nombre, c.telefono as cli_telefono, c.provincia as cli_provincia, c.ciudad as cli_ciudad, c.direccion as cli_direccion,
-               t.nombre as trans_nombre,
-               a.nombre as alm_nombre
-        FROM pedidos p
-        JOIN clientes c ON p.cliente_id = c.id
-        LEFT JOIN transportadoras t ON p.transportadora_id = t.id
-        LEFT JOIN almacenes a ON p.almacen_id = a.id
-        WHERE p.id = ? AND p.empresa_id = ?";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute([$pedido_id, $empresa_id]);
-$pedido = $stmt->fetch();
-
-if (!$pedido) {
-    echo "<div class='alert alert-danger'>Pedido no encontrado o no tienes permiso.</div>";
-    include 'includes/footer.php';
-    exit;
-}
-
-// 3. OBTENER ITEMS DEL PEDIDO
-$stmt = $pdo->prepare("SELECT * FROM pedidos_detalle WHERE pedido_id = ?");
-$stmt->execute([$pedido_id]);
-$items = $stmt->fetchAll();
-
-// Helper para Mensaje de WhatsApp
-$mensaje_ws = "Hola {$pedido['cli_nombre']}, le saludamos de SRGUERRA. Para confirmar su pedido #{$pedido['numero_orden']} de un total de RD$" . number_format($pedido['total_venta']) . ". ¿Sus datos de entrega son correctos?";
-$link_ws = "https://wa.me/1" . preg_replace('/[^0-9]/', '', $pedido['cli_telefono']) . "?text=" . urlencode($mensaje_ws);
-
-// Helper para colores de estado
-function getStatusColor($status)
-{
-    switch ($status) {
-        case 'Nuevo':
-            return 'primary';
-        case 'Confirmado':
-            return 'info';
-        case 'En Ruta':
-            return 'warning';
-        case 'Entregado':
-            return 'success';
-        case 'Devuelto':
-            return 'danger';
-        default:
-            return 'secondary';
-    }
-}
-?>
-<?php
 // modules/pedidos/ver.php
 // VISTA DETALLADA DEL PEDIDO CON EDICIÓN LOGÍSTICA
 
@@ -92,7 +32,7 @@ if (!$pedido) {
     return;
 }
 
-// 3. Obtener Listas para los Dropdowns (NUEVO)
+// 3. Obtener Listas para los Dropdowns
 $lista_trans = $pdo->query("SELECT * FROM transportadoras WHERE empresa_id = $empresa_id AND activo = 1")->fetchAll();
 $lista_alm = $pdo->query("SELECT * FROM almacenes WHERE empresa_id = $empresa_id AND activo = 1")->fetchAll();
 
@@ -119,26 +59,57 @@ $detalles = $stmt_det->fetchAll();
 
 <div class="row g-4">
     <div class="col-lg-8">
+        
         <div class="card-glass p-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <span class="h-label text-neon">ESTADO ACTUAL</span>
-                <span class="badge bg-primary fs-6 px-3 rounded-pill"><?php echo $pedido['estado_interno']; ?></span>
+                
+                <?php 
+                // VERIFICAR SI ESTÁ DEVUELTO PARA BLOQUEAR
+                $es_devuelto = ($pedido['estado_interno'] == 'Devuelto'); 
+                $badge_color = $es_devuelto ? 'bg-danger' : 'bg-primary';
+                ?>
+                
+                <span class="badge <?php echo $badge_color; ?> fs-6 px-3 rounded-pill"><?php echo $pedido['estado_interno']; ?></span>
             </div>
+
             <form action="index.php?ruta=actualizar-estado-pedido" method="POST" class="d-flex gap-2">
                 <input type="hidden" name="action" value="actualizar_estado">
                 <input type="hidden" name="pedido_id" value="<?php echo $pedido['id']; ?>">
+                
                 <div class="flex-grow-1">
                     <select name="nuevo_estado" class="form-select bg-dark text-white border-secondary">
                         <option value="Nuevo" <?php echo $pedido['estado_interno'] == 'Nuevo' ? 'selected' : ''; ?>>Nuevo</option>
                         <option value="Confirmado" <?php echo $pedido['estado_interno'] == 'Confirmado' ? 'selected' : ''; ?>>Confirmado</option>
                         <option value="En Ruta" <?php echo $pedido['estado_interno'] == 'En Ruta' ? 'selected' : ''; ?>>🚚 En Ruta</option>
+                        
+                        <option value="Rechazado" <?php echo $pedido['estado_interno'] == 'Rechazado' ? 'selected' : ''; ?> class="text-warning">⚠️ Rechazado (En poder del chofer)</option>
+                        
+                        <option value="Devuelto" <?php echo $pedido['estado_interno'] == 'Devuelto' ? 'selected' : ''; ?>>📥 Recibir en Almacén (Devuelto)</option>
+                        
                         <option value="Entregado" <?php echo $pedido['estado_interno'] == 'Entregado' ? 'selected' : ''; ?>>✅ Entregado</option>
-                        <option value="Devuelto" <?php echo $pedido['estado_interno'] == 'Devuelto' ? 'selected' : ''; ?>>↩️ Devuelto</option>
                         <option value="Cancelado" <?php echo $pedido['estado_interno'] == 'Cancelado' ? 'selected' : ''; ?>>❌ Cancelado</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary fw-bold px-4 shadow">Actualizar</button>
+                    <?php if(!empty($pedido['motivo_rechazo'])): ?>
+                        <div class="alert alert-warning mt-2 p-2 small border-warning text-dark">
+                            <i class="fas fa-exclamation-circle me-1"></i> <strong>Motivo Rechazo:</strong> <?php echo $pedido['motivo_rechazo']; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    
+                <?php if ($es_devuelto): ?>
+                    <button type="button" class="btn btn-secondary fw-bold px-4" disabled><i class="fas fa-lock me-2"></i> Bloqueado</button>
+                <?php else: ?>
+                    <button type="submit" class="btn btn-primary fw-bold px-4 shadow">Actualizar</button>
+                <?php endif; ?>
             </form>
+
+            <?php if ($es_devuelto): ?>
+                <div class="alert alert-danger mt-3 mb-0 py-2 small border-danger bg-danger bg-opacity-10 text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Esta orden fue devuelta y el inventario repuesto. No se puede modificar.
+                </div>
+            <?php endif; ?>
         </div>
 
         <div class="card-glass p-4">
@@ -224,9 +195,11 @@ $detalles = $stmt_det->fetchAll();
                     </div>
                 </div>
 
+                <?php if(!$es_devuelto): ?>
                 <button type="submit" class="btn btn-outline-light w-100 btn-sm">
                     <i class="fas fa-save me-2"></i> Guardar Logística
                 </button>
+                <?php endif; ?>
             </form>
 
             <hr class="border-secondary opacity-25 my-4">

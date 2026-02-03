@@ -119,3 +119,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] == 'actualizar_sto
         die("Error al actualizar inventario: " . $e->getMessage());
     }
 }
+// =========================================================
+    // CASO NUEVO: REGISTRAR COMPRA
+    // =========================================================
+    elseif ($action == 'registrar_compra') {
+        
+        // Validar CSRF (Recomendado)
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            die("Error de seguridad.");
+        }
+
+        $producto_id = (int)$_POST['producto_id'];
+        $almacen_id  = (int)$_POST['almacen_id'];
+        $cantidad    = (int)$_POST['cantidad'];
+        $costo       = (float)$_POST['costo_unitario'];
+        $proveedor   = $_POST['proveedor'] ?? '';
+        $empresa_id  = $_SESSION['empresa_id'];
+
+        if ($cantidad <= 0) die("La cantidad debe ser mayor a 0.");
+
+        try {
+            $pdo->beginTransaction();
+
+            // 1. Registrar en Historial de Compras
+            $sql_hist = "INSERT INTO compras (empresa_id, producto_id, almacen_id, cantidad, costo_unitario, proveedor, fecha_compra) 
+                         VALUES (?, ?, ?, ?, ?, ?, NOW())";
+            $pdo->prepare($sql_hist)->execute([$empresa_id, $producto_id, $almacen_id, $cantidad, $costo, $proveedor]);
+
+            // 2. Aumentar Stock en Almacén Específico
+            // (Si existe suma, si no existe crea)
+            $sql_inv = "INSERT INTO inventario_almacen (producto_id, almacen_id, cantidad) 
+                        VALUES (?, ?, ?) 
+                        ON DUPLICATE KEY UPDATE cantidad = cantidad + ?";
+            $pdo->prepare($sql_inv)->execute([$producto_id, $almacen_id, $cantidad, $cantidad]);
+
+            // 3. Actualizar Producto (Stock Global + Nuevo Costo)
+            // Aquí actualizamos el costo_compra al nuevo precio que introdujiste
+            $sql_prod = "UPDATE productos 
+                         SET stock_actual = stock_actual + ?, 
+                             costo_compra = ? 
+                         WHERE id = ? AND empresa_id = ?";
+            $pdo->prepare($sql_prod)->execute([$cantidad, $costo, $producto_id, $empresa_id]);
+
+            $pdo->commit();
+            
+            // Redirigir al inventario
+            header("Location: index.php?ruta=inventario&msg=compra_registrada");
+            exit();
+
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            die("Error al registrar compra: " . $e->getMessage());
+        }
+    }

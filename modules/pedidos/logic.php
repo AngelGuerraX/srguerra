@@ -1,18 +1,16 @@
 <?php
 // modules/pedidos/logic.php
-// MOTOR LÓGICO DEL SISTEMA (INTEGRADO CON INVENTARIO)
+// MOTOR LÓGICO PRINCIPAL (ADMINISTRADOR)
 
-// 1. Verificar Sesión
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+// Validar Sesión de Admin
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php?ruta=login");
     exit();
 }
 
 $empresa_id = $_SESSION['empresa_id'] ?? 1;
-
-// Verificar si hay una acción POST o GET (para casos como actualizar_estado que a veces mandan param action)
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
@@ -96,6 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
             $stmt->execute([$pedido_id, $prod_id, $prod_nombre, $cantidad, $precio]);
 
             // 4. LÓGICA DE INVENTARIO (DESCONTAR AL CREAR)
+            // Solo si se seleccionó producto y almacén en la creación
             if ($prod_id && $alm_id) {
                 // Verificar Stock
                 $stmt = $pdo->prepare("SELECT cantidad FROM inventario_almacen WHERE producto_id = ? AND almacen_id = ?");
@@ -122,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
     }
 
     // =========================================================
-    // CASO 3: ACTUALIZAR ESTADO (CON DEVOLUCIÓN DE STOCK)
+    // CASO 3: ACTUALIZAR ESTADO (ADMIN RECIBE DEVOLUCIÓN)
     // =========================================================
     elseif ($action == 'actualizar_estado' || $action == 'cambiar_estado') {
         $pedido_id = $_POST['pedido_id'];
@@ -136,22 +135,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
             $stmt_check->execute([$pedido_id]);
             $actual = $stmt_check->fetch();
 
-            // 2. Lógica de DEVOLUCIÓN DE STOCK
-            // Si cancelamos o devolvemos, y el pedido YA tenía un almacén asignado, devolvemos stock.
-            $estados_devolucion = ['Cancelado', 'Devuelto'];
+            // Seguridad: Si ya está devuelto, no permitir cambios para evitar duplicar stock
+            if ($actual['estado_interno'] == 'Devuelto') {
+                die("Error: Este pedido ya fue procesado como devuelto.");
+            }
+
+            // 2. LÓGICA DE RETORNO DE INVENTARIO (Check-in en Almacén)
+            // Solo si el NUEVO estado es 'Devuelto' y antes NO lo era.
+            // Esto cubre si viene de 'Rechazado' (del chofer) o de 'En Ruta'.
             
-            if (in_array($nuevo_estado, $estados_devolucion) && !in_array($actual['estado_interno'], $estados_devolucion)) {
+            if ($nuevo_estado == 'Devuelto') {
+                
                 if (!empty($actual['almacen_id'])) {
                     $items = $pdo->prepare("SELECT producto_id, cantidad FROM pedidos_detalle WHERE pedido_id = ?");
                     $items->execute([$pedido_id]);
                     
                     foreach ($items->fetchAll() as $item) {
                         if ($item['producto_id'] > 0) {
-                            // Devolver al almacén
+                            // Sumar al almacén (Recibido físicamente)
                             $pdo->prepare("UPDATE inventario_almacen SET cantidad = cantidad + ? WHERE producto_id = ? AND almacen_id = ?")
                                 ->execute([$item['cantidad'], $item['producto_id'], $actual['almacen_id']]);
 
-                            // Devolver al global
+                            // Sumar al global
                             $pdo->prepare("UPDATE productos SET stock_actual = stock_actual + ? WHERE id = ?")
                                 ->execute([$item['cantidad'], $item['producto_id']]);
                         }
@@ -159,11 +164,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 }
             }
 
-            // 3. Actualizar Estado
+            // 3. Actualizar Estado en DB
             $sql = "UPDATE pedidos SET estado_interno = ?, fecha_actualizacion = NOW() WHERE id = ? AND empresa_id = ?";
             $pdo->prepare($sql)->execute([$nuevo_estado, $pedido_id, $empresa_id]);
 
-            // 4. Si es entregado, marcar fecha
+            // Si es entregado (forzado por admin)
             if ($nuevo_estado == 'Entregado') {
                 $pdo->prepare("UPDATE pedidos SET fecha_entrega = NOW() WHERE id = ?")->execute([$pedido_id]);
             }
@@ -179,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
     }
 
     // =========================================================
-    // CASO 4: ASIGNAR LOGÍSTICA (CON DESCUENTO DE STOCK)
+    // CASO 4: ASIGNAR LOGÍSTICA (DESCUENTA STOCK SI NO TENÍA)
     // =========================================================
     elseif ($action == 'asignar_logistica') {
         $pedido_id = $_POST['pedido_id'];
@@ -215,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 }
             }
 
-            // 3. Recalcular costos (Para guardar el histórico)
+            // 3. Recalcular costos
             $costo_envio = 0;
             $costo_empaque = 0;
 
@@ -246,7 +251,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
     }
 
     // =========================================================
-    // CASO 5: DESPACHO MASIVO (MOVIDO DENTRO DEL FLUJO)
+    // CASO 5: DESPACHO MASIVO (DESCUENTA STOCK)
     // =========================================================
     elseif ($action == 'asignar_masivo') {
         
@@ -262,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
             $pdo->beginTransaction();
 
             foreach ($ids_pedidos as $id_pedido) {
-                // Verificar si ya tenía almacén para no descontar doble (opcional, pero seguro)
+                // Verificar si ya tenía almacén para no descontar doble
                 $check = $pdo->query("SELECT almacen_id FROM pedidos WHERE id = $id_pedido")->fetch();
                 if(!empty($check['almacen_id'])) continue; 
 
@@ -312,7 +317,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
     }
 
 } else {
-    // Si entran directo al archivo sin POST
     header("Location: index.php");
     exit();
 }

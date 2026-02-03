@@ -51,8 +51,12 @@ $total_prods = count($productos);
         <h2 class="fw-bold text-white">Inventario</h2>
     </div>
     <a href="index.php?ruta=inventario/nuevo" class="btn btn-primary rounded-pill px-4 btn-glow">
-        <i class="fas fa-plus me-2"></i> Nuevo Producto
+        <i class="fas fa-plus me-2"></i> Nuevo
+    </a>    
+    <a href="index.php?ruta=inventario/comprar" class="btn btn-success rounded-pill px-4 text-white fw-bold">
+        <i class="fas fa-shopping-cart me-2"></i> Compra
     </a>
+</div>
 </div>
 
 <div class="card-glass p-3 mb-4">

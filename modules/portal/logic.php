@@ -1,100 +1,89 @@
 <?php
 // modules/portal/logic.php
-// LÓGICA DEL PORTAL DE CONDUCTORES
+// LÓGICA DEL PORTAL DE CONDUCTORES (APP MÓVIL)
 
-// Iniciar sesión si no existe
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-// Conexión BDD (Si se llama directo)
-if (!isset($pdo)) require_once 'config/db.php'; 
+// Conexión a la BDD (Ajusta la ruta si tu archivo db.php está en otro lado)
+if (!isset($pdo)) {
+    if (file_exists('../../config/db.php')) require_once '../../config/db.php';
+}
 
-// =============================================================================
-// LOGIN DE CONDUCTOR
-// =============================================================================
+// 1. LOGIN DE CONDUCTOR
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] == 'login_conductor') {
-    
     $codigo = strtoupper(trim($_POST['codigo']));
     $pin    = trim($_POST['pin']);
 
-    // Buscar transportadora por CÓDIGO
     $stmt = $pdo->prepare("SELECT * FROM transportadoras WHERE codigo_acceso = ? AND activo = 1 LIMIT 1");
     $stmt->execute([$codigo]);
     $chofer = $stmt->fetch();
 
     if ($chofer && password_verify($pin, $chofer['pin_acceso'])) {
-        
-        // ¡LOGIN EXITOSO!
-        // Creamos una sesión especial, diferente a la del Admin
-        $_SESSION['usuario_id'] = 'CHOFER-' . $chofer['id']; // ID ficticio para pasar filtros
+        $_SESSION['usuario_id'] = 'CHOFER-' . $chofer['id'];
         $_SESSION['transportadora_id'] = $chofer['id'];
         $_SESSION['rol'] = 'Conductor';
         $_SESSION['nombre'] = $chofer['nombre'];
-        $_SESSION['empresa_id'] = $chofer['empresa_id']; // Vinculado a la empresa dueña
-
+        $_SESSION['empresa_id'] = $chofer['empresa_id'];
         header("Location: index.php?ruta=portal/dashboard");
-        exit();
-
     } else {
-        // Falló
         header("Location: index.php?ruta=portal/login&error=true");
-        exit();
     }
+    exit();
 }
 
-// LOGOUT
+// VALIDAR SESIÓN PARA EL RESTO
+if (!isset($_SESSION['transportadora_id'])) {
+    header("Location: index.php?ruta=portal/login");
+    exit();
+}
+
+// 2. LOGOUT
 if (isset($_GET['action']) && $_GET['action'] == 'logout') {
     session_destroy();
     header("Location: index.php?ruta=portal/login");
     exit();
 }
 
-// =============================================================================
-// ACTUALIZAR ESTADO DEL PEDIDO (Desde la App Conductor)
-// =============================================================================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] == 'actualizar_estado_ruta') {
+// 3. MARCAR ENTREGADO
+if ($_POST['action'] == 'marcar_entregado') {
+    $pedido_id = $_POST['pedido_id'];
+    $comentario = $_POST['comentario'] ?? '';
     
-    // Verificamos sesión por seguridad
-    if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 'Conductor') {
-        die("Acceso denegado");
-    }
-
-    $id_pedido = $_POST['id'];
-    $nuevo_estado = $_POST['nuevo_estado']; // 'Entregado' o 'Devuelto'
-    $comentario = trim($_POST['comentario'] ?? '');
-    $motivo = $_POST['motivo'] ?? '';
+    // Guardamos fecha de entrega y comentario
+    $stmt = $pdo->prepare("UPDATE pedidos SET estado_interno = 'Entregado', fecha_entrega = NOW(), notas_internas = CONCAT(COALESCE(notas_internas, ''), ' | ', ?) WHERE id = ?");
+    $stmt->execute([$comentario, $pedido_id]);
     
-    // Combinar motivo y comentario si es devolución
-    if (!empty($motivo)) {
-        $comentario = "Motivo: $motivo. " . $comentario;
-    }
+    header("Location: index.php?ruta=portal/dashboard&msg=entregado");
+    exit();
+}
 
-    $transportadora_id = $_SESSION['transportadora_id'];
+// 4. MARCAR RECHAZADO (SOLO CAMBIA ESTADO, EL STOCK SE QUEDA CON EL CHOFER)
+if ($_POST['action'] == 'marcar_rechazado') {
+    $pedido_id = $_POST['pedido_id'];
+    $motivo = $_POST['motivo'];
+    $comentario = $_POST['comentario'] ?? '';
 
-    // Validar que el pedido pertenezca a esta transportadora (Evitar hackeos)
-    $check = $pdo->prepare("SELECT id FROM pedidos WHERE id = ? AND transportadora_id = ?");
-    $check->execute([$id_pedido, $transportadora_id]);
-    
-    if ($check->fetch()) {
+    try {
+        // Solo cambiamos el estado a 'Rechazado' y guardamos el motivo.
+        // NO movemos inventario aquí. El inventario se mueve cuando el Admin lo marca como 'Devuelto'.
+        $sql = "UPDATE pedidos 
+                SET estado_interno = 'Rechazado', 
+                    motivo_rechazo = ?, 
+                    fecha_actualizacion = NOW(),
+                    notas_internas = CONCAT(COALESCE(notas_internas, ''), ' | ', ?) 
+                WHERE id = ?";
         
-        // 1. Actualizamos el Estado
-        // Si es entregado, ponemos la fecha de entrega AHORA
-        if ($nuevo_estado == 'Entregado') {
-            $sql = "UPDATE pedidos SET estado_interno = ?, fecha_entrega = NOW(), notas_internas = CONCAT(COALESCE(notas_internas, ''), ' | Chofer: ', ?) WHERE id = ?";
-        } else {
-            // Si es devuelto, no ponemos fecha de entrega
-            $sql = "UPDATE pedidos SET estado_interno = ?, notas_internas = CONCAT(COALESCE(notas_internas, ''), ' | Devolución: ', ?) WHERE id = ?";
-        }
-
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$nuevo_estado, $comentario, $id_pedido]);
+        $stmt->execute([$motivo, $comentario, $pedido_id]);
 
-        // Redirigir al dashboard con éxito
-        header("Location: index.php?ruta=portal/dashboard&msg=actualizado");
+        header("Location: index.php?ruta=portal/dashboard&msg=rechazado");
         exit();
 
-    } else {
-        die("Error: Este pedido no te corresponde.");
+    } catch (Exception $e) {
+        die("Error al reportar rechazo: " . $e->getMessage());
     }
 }
 
+// Default
+header("Location: index.php?ruta=portal/dashboard");
 ?>

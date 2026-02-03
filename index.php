@@ -141,6 +141,10 @@ switch ($ruta) {
     // --- MARKETING (Opcional) ---
     case 'marketing': include 'modules/marketing/index.php'; break;
 
+    case 'inventario/comprar':
+        include 'modules/inventario/comprar.php';
+        break;
+        
     // --- ERROR 404 ---
     default:
         echo "<div class='d-flex justify-content-center align-items-center vh-100 text-white'>";

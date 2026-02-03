@@ -17,6 +17,34 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
 }
 ?>
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    /* Ajuste oscuro para Select2 */
+    .select2-container--bootstrap-5 .select2-selection {
+        background-color: #212529 !important;
+        border-color: #6c757d !important;
+        color: #fff !important;
+    }
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        color: #fff !important;
+    }
+    .select2-search__field {
+        background-color: #212529 !important;
+        color: #fff !important;
+    }
+    .select2-results__option {
+        background-color: #212529;
+        color: #fff;
+    }
+    .select2-results__option--highlighted {
+        background-color: #0d6efd !important; 
+    }
+</style>
+
 <div class="row mb-4">
     <div class="col-12">
         <a href="index.php?ruta=pedidos" class="btn btn-outline-light btn-sm mb-3"><i class="fas fa-arrow-left"></i> Volver</a>
@@ -35,7 +63,7 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
 
                 <div class="mb-3">
                     <label class="text-white small">Seleccionar Cliente Existente (Opcional)</label>
-                    <select class="form-select bg-dark text-white border-secondary" onchange="cargarCliente(this)">
+                    <select class="form-select bg-dark text-white border-secondary" id="select_cliente_existente" onchange="cargarCliente(this)">
                         <option value="">-- Nuevo Cliente --</option>
                         <?php foreach ($clientes as $c): ?>
                             <option value="<?php echo $c['id']; ?>"
@@ -113,11 +141,12 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
             </div>
 
             <div class="card-glass p-4">
-                <span class="h-label text-neon mb-3">LOGÍSTICA</span>
+                <span class="h-label text-neon mb-3">LOGÍSTICA (Opcional)</span>
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="text-white small">Transportadora</label>
-                        <select name="transportadora_id" id="transporte" class="form-select bg-dark text-white border-secondary" required onchange="calcularCostoEnvio()">
+                        <select name="transportadora_id" id="transporte" class="form-select bg-dark text-white border-secondary" onchange="calcularCostoEnvio()">
+                            <option value="" data-costo="0">-- Sin Asignar --</option>
                             <?php foreach ($transportadoras as $t): ?>
                                 <option value="<?php echo $t['id']; ?>" data-costo="<?php echo $t['costo_envio_fijo']; ?>">
                                     <?php echo $t['nombre']; ?>
@@ -127,7 +156,7 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
                     </div>
                     <div class="col-md-6">
                         <label class="text-white small">Costo Envío (Real)</label>
-                        <input type="number" name="costo_envio_real" id="costo_envio" class="form-control bg-black text-white border-secondary" readonly>
+                        <input type="number" name="costo_envio_real" id="costo_envio" class="form-control bg-black text-white border-secondary" value="0" readonly>
                     </div>
                     <div class="col-12">
                         <label class="text-white small">Notas Internas</label>
@@ -143,9 +172,9 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
 
                 <div class="mb-3">
                     <label class="text-white small">Producto *</label>
-                    <select name="producto_id" id="producto_select" class="form-select bg-dark text-white border-secondary fs-5" required onchange="seleccionarProducto(this)">
-                        <option value="" data-precio="0">-- Seleccionar --</option>
-                        <option value="0" data-precio="0" class="text-warning">[ + ] Producto Manual (Sin Stock)</option>
+                    <select name="producto_id" id="producto_select" class="form-select bg-dark text-white border-secondary fs-5" required>
+                        <option value="" data-precio="0">-- Buscar Producto --</option>
+                        <option value="0" data-precio="0">[ + ] Producto Manual (Sin Stock)</option>
 
                         <?php foreach ($productos as $p): ?>
                             <option value="<?php echo $p['id']; ?>"
@@ -159,8 +188,9 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
                 </div>
 
                 <div class="mb-3">
-                    <label class="text-white small">Almacén de Origen *</label>
-                    <select name="almacen_id" id="almacen_select" class="form-select bg-dark text-white border-secondary" required onchange="actualizarCostoEmpaque()">
+                    <label class="text-white small">Almacén de Origen</label>
+                    <select name="almacen_id" id="almacen_select" class="form-select bg-dark text-white border-secondary" onchange="actualizarCostoEmpaque()">
+                        <option value="" data-costo="0">-- Sin Asignar (No descuenta stock) --</option>
                         <?php foreach ($almacenes as $a): ?>
                             <option value="<?php echo $a['id']; ?>"
                                 data-costo="<?php echo $a['costo_empaque']; ?>"
@@ -169,7 +199,7 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <input type="hidden" name="costo_empaque_real" id="costo_empaque">
+                    <input type="hidden" name="costo_empaque_real" id="costo_empaque" value="0">
                 </div>
 
                 <div class="row g-2 mb-3">
@@ -189,7 +219,7 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-3 mt-3 fw-bold rounded-pill shadow-lg">
-                    <i class="fas fa-check-circle me-2"></i> CONFIRMAR PEDIDO
+                    <i class="fas fa-check-circle me-2"></i> CREAR PEDIDO
                 </button>
             </div>
         </div>
@@ -199,6 +229,20 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
 <script>
     // 1. IMPORTAR EL MAPA DE STOCK DE PHP A JS
     const stockMap = <?php echo json_encode($stock_map); ?>;
+
+    // === INICIALIZACIÓN DE SELECT2 (BUSCADOR) ===
+    $(document).ready(function() {
+        $('#producto_select').select2({
+            theme: "bootstrap-5",
+            width: '100%',
+            placeholder: '-- Buscar Producto --'
+        });
+
+        // Vincular el evento change de Select2 con nuestra función
+        $('#producto_select').on('change', function() {
+            seleccionarProducto(this);
+        });
+    });
 
     // === BASE DE DATOS GEOGRÁFICA RD (COMPLETA) ===
     const datosRD = {
@@ -236,21 +280,16 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
         "Valverde": ["Mao", "Esperanza", "Laguna Salada"]
     };
 
-    // Función actualizada para usar los datos completos
     function actualizarCiudades() {
         const selectProvincia = document.getElementById('cli_prov');
         const selectCiudad = document.getElementById('select_ciudad');
         const provinciaSeleccionada = selectProvincia.value;
 
-        // Limpiar ciudades anteriores
         selectCiudad.innerHTML = "<option value=''>Selecciona Ciudad...</option>";
 
         if (provinciaSeleccionada && datosRD[provinciaSeleccionada]) {
             const ciudades = datosRD[provinciaSeleccionada];
-            
-            // Ordenar alfabéticamente
             ciudades.sort();
-
             ciudades.forEach(ciudad => {
                 let opt = document.createElement('option');
                 opt.value = ciudad;
@@ -258,8 +297,6 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
                 selectCiudad.appendChild(opt);
             });
         }
-        
-        // Resetear valor hidden
         document.getElementById('ciudad_final').value = "";
     }
 
@@ -267,7 +304,6 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
         document.getElementById('ciudad_final').value = select.value;
     }
 
-    // Función de carga de cliente (modificada para seleccionar provincia/ciudad automáticamente si existen)
     function cargarCliente(select) {
         const opt = select.options[select.selectedIndex];
         if (select.value !== "") {
@@ -278,11 +314,9 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
             const prov = opt.getAttribute('data-prov');
             const ciudad = opt.getAttribute('data-ciudad');
 
-            // Intentar setear provincia
             const selectProv = document.getElementById('cli_prov');
             selectProv.value = prov;
             
-            // Si la provincia existe en el select, actualizar ciudades y luego seleccionar ciudad
             if (selectProv.value === prov) {
                 actualizarCiudades();
                 const selectCiudad = document.getElementById('select_ciudad');
@@ -292,7 +326,7 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
         }
     }
 
-    // --- RESTO DE TU LÓGICA ORIGINAL ---
+    // --- LÓGICA DE PRODUCTOS Y COSTOS ---
 
     function seleccionarProducto(select) {
         const opcion = select.options[select.selectedIndex];
@@ -319,11 +353,14 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
         const selectAlmacen = document.getElementById('almacen_select');
         const opciones = selectAlmacen.options;
 
+        // Resetear visualmente si no hay producto
         if (prodId == '0' || prodId == '') {
             for (let i = 0; i < opciones.length; i++) {
+                if (opciones[i].value == "") continue; // Saltar el "Sin Asignar"
                 let nombreOriginal = opciones[i].getAttribute('data-nombre');
                 opciones[i].text = nombreOriginal;
                 opciones[i].disabled = false;
+                opciones[i].classList.remove('text-muted');
             }
             return;
         }
@@ -331,6 +368,8 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
         const stockProducto = stockMap[prodId] || {}; 
 
         for (let i = 0; i < opciones.length; i++) {
+            if (opciones[i].value == "") continue; // Saltar "Sin Asignar"
+
             let almId = opciones[i].value;
             let nombreOriginal = opciones[i].getAttribute('data-nombre');
             let cantidad = stockProducto[almId] || 0;
@@ -341,6 +380,7 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
                 opciones[i].classList.remove('text-muted');
             } else {
                 opciones[i].text = `❌ ${nombreOriginal} (Agotado)`;
+                // Opcional: no deshabilitar para permitir backorders, pero marcamos visualmente
                 opciones[i].classList.add('text-muted');
             }
         }
@@ -354,12 +394,22 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
 
     function calcularCostoEnvio() {
         const select = document.getElementById('transporte');
+        // Manejar si está vacío (Sin Asignar)
+        if(select.value === "") {
+             document.getElementById('costo_envio').value = 0;
+             return;
+        }
         const costo = select.options[select.selectedIndex].getAttribute('data-costo');
         document.getElementById('costo_envio').value = costo;
     }
 
     function actualizarCostoEmpaque() {
         const select = document.getElementById('almacen_select');
+        // Manejar si está vacío (Sin Asignar)
+        if(select.value === "") {
+             document.getElementById('costo_empaque').value = 0;
+             return;
+        }
         const costo = select.options[select.selectedIndex].getAttribute('data-costo');
         document.getElementById('costo_empaque').value = costo;
     }
