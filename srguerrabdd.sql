@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 03-02-2026 a las 01:16:58
+-- Tiempo de generación: 03-02-2026 a las 16:31:36
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -51,7 +51,8 @@ INSERT INTO `almacenes` (`id`, `empresa_id`, `nombre`, `ubicacion`, `costo_empaq
 (8, 2, 'Merquix', 'Av. Rómulo Betancourt 323, Santo Domingo, edificio MR.B Self Storage - Rómulo Betancourt', 44.00, 1),
 (9, 2, 'Mary', 'Avenida ecolgica, brisas del este', 0.00, 1),
 (10, 2, 'Taxi Yorlin', 'Carro', 0.00, 1),
-(11, 5, 'Almacén Principal', '', 50.00, 1);
+(11, 5, 'Almacén Principal', '', 50.00, 1),
+(12, 6, 'Almacén Principal', '', 50.00, 1);
 
 -- --------------------------------------------------------
 
@@ -106,7 +107,11 @@ INSERT INTO `clientes` (`id`, `empresa_id`, `nombre`, `telefono`, `email`, `prov
 (28, 5, 'juan', '798484', NULL, 'La Vega', 'Constanza', 'wwww', NULL),
 (29, 5, 'pedro', '515541', NULL, 'María Trinidad Sánchez', 'Cabrera', 'rrr', NULL),
 (30, 5, 'juanito', '222', NULL, 'María Trinidad Sánchez', 'Cabrera', 'wwd', NULL),
-(31, 5, 'c1', '8294389999', NULL, 'Dajabón', 'Dajabón', 'ee', NULL);
+(31, 5, 'c1', '8294389999', NULL, 'Dajabón', 'Dajabón', 'ee', NULL),
+(32, 6, 'juan', '8094411000', NULL, 'La Vega', 'Constanza', 'alli', NULL),
+(33, 6, 'maria', '684864856', NULL, 'La Vega', 'Jima Abajo', 'kkl', NULL),
+(34, 6, 'prueba1 -', '8294389999', NULL, 'La Romana', 'Guaymate', 'jhhg', NULL),
+(35, 6, 'juan', '554443', NULL, 'La Vega', 'Jarabacoa', 'dfsf', NULL);
 
 -- --------------------------------------------------------
 
@@ -130,7 +135,8 @@ CREATE TABLE `compras` (
 --
 
 INSERT INTO `compras` (`id`, `empresa_id`, `producto_id`, `almacen_id`, `cantidad`, `costo_unitario`, `proveedor`, `fecha_compra`) VALUES
-(1, 5, 4, 11, 10, 50.00, 'I AM IRONMAN', '2026-02-02 16:59:08');
+(1, 5, 4, 11, 10, 50.00, 'I AM IRONMAN', '2026-02-02 16:59:08'),
+(2, 6, 6, 12, 1, 800.00, '', '2026-02-02 23:16:11');
 
 -- --------------------------------------------------------
 
@@ -163,7 +169,8 @@ INSERT INTO `empresas` (`id`, `nombre_comercial`, `razon_social`, `rnc`, `telefo
 (2, 'El Clavito', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Gratis', 'Activo', '2026-01-31 01:14:24'),
 (3, 'Empresa Prueba', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Gratis', 'Suspendido', '2026-01-31 01:18:09'),
 (4, 'Todoclick', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Gratis', 'Activo', '2026-02-01 20:48:24'),
-(5, 'demo', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Gratis', 'Activo', '2026-02-02 16:46:39');
+(5, 'demo', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Gratis', 'Activo', '2026-02-02 16:46:39'),
+(6, 'fuego', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Enterprise', 'Activo', '2026-02-02 20:27:09');
 
 -- --------------------------------------------------------
 
@@ -225,28 +232,10 @@ INSERT INTO `inventario_almacen` (`id`, `producto_id`, `almacen_id`, `cantidad`,
 (8, 3, 8, 27, NULL),
 (9, 3, 9, 12, NULL),
 (16, 3, 10, 12, NULL),
-(23, 4, 11, 19, NULL);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `inventario_almacenes`
---
-
-CREATE TABLE `inventario_almacenes` (
-  `id` int(11) NOT NULL,
-  `producto_id` int(11) NOT NULL,
-  `almacen_id` int(11) NOT NULL,
-  `cantidad` int(11) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `inventario_almacenes`
---
-
-INSERT INTO `inventario_almacenes` (`id`, `producto_id`, `almacen_id`, `cantidad`) VALUES
-(3, 1, 1, -1),
-(4, 3, 4, -5);
+(23, 4, 11, 19, NULL),
+(32, 5, 12, 10, NULL),
+(34, 6, 12, 10, NULL),
+(37, 7, 12, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -264,6 +253,13 @@ CREATE TABLE `marketing_campanas` (
   `creado_en` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `marketing_campanas`
+--
+
+INSERT INTO `marketing_campanas` (`id`, `empresa_id`, `producto_id`, `nombre`, `plataforma`, `estado`, `creado_en`) VALUES
+(1, 6, 6, 'Correa prueba', 'Facebook Ads', 'Activa', '2026-02-02 20:54:52');
+
 -- --------------------------------------------------------
 
 --
@@ -272,10 +268,19 @@ CREATE TABLE `marketing_campanas` (
 
 CREATE TABLE `marketing_gasto` (
   `id` int(11) NOT NULL,
-  `campana_id` int(11) NOT NULL,
+  `empresa_id` int(11) NOT NULL,
   `fecha` date NOT NULL,
-  `monto` decimal(10,2) NOT NULL
+  `plataforma` enum('Facebook Ads','TikTok Ads','Google Ads','Influencer') DEFAULT 'Facebook Ads',
+  `monto` decimal(10,2) NOT NULL,
+  `notas` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `marketing_gasto`
+--
+
+INSERT INTO `marketing_gasto` (`id`, `empresa_id`, `fecha`, `plataforma`, `monto`, `notas`) VALUES
+(1, 6, '2026-02-02', 'Facebook Ads', 1000.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -292,7 +297,7 @@ CREATE TABLE `pedidos` (
   `shopify_order_id` bigint(20) DEFAULT NULL,
   `origen` varchar(50) DEFAULT 'Manual',
   `numero_orden` varchar(50) NOT NULL,
-  `estado_interno` enum('Nuevo','Confirmado','En Ruta','Entregado','Devuelto','Cancelado') DEFAULT 'Nuevo',
+  `estado_interno` enum('Nuevo','Confirmado','En Ruta','Entregado','Devuelto','Rechazado','Cancelado') DEFAULT 'Nuevo',
   `total_venta` decimal(10,2) NOT NULL,
   `costo_envio_real` decimal(10,2) DEFAULT 0.00,
   `costo_empaque_real` decimal(10,2) DEFAULT 0.00,
@@ -329,7 +334,9 @@ INSERT INTO `pedidos` (`id`, `empresa_id`, `cliente_id`, `transportadora_id`, `a
 (26, 2, 21, 14, 8, 1770009608, 'Manual', 'MAN-020112-39', 'Nuevo', 1450.00, 350.00, 44.00, '', NULL, NULL, '2026-02-02 01:12:59', NULL, NULL),
 (27, 2, 22, 6, 4, 1770010208, 'Manual', 'MAN-020114-94', 'Confirmado', 1450.00, 250.00, 0.00, '', NULL, NULL, '2026-02-02 01:14:14', NULL, '2026-02-02 16:37:24'),
 (28, 2, 23, 14, 8, 1770009849, 'Manual', 'MAN-020120-11', 'En Ruta', 1450.00, 350.00, 44.00, '', NULL, NULL, '2026-02-02 01:20:36', NULL, '2026-02-02 02:30:28'),
-(30, 2, 25, 6, 4, 1770065304, 'Manual', 'MAN-021632-38', 'Confirmado', 1450.00, 250.00, 0.00, '', NULL, NULL, '2026-02-02 16:32:53', '2026-02-02 16:33:40', '2026-02-02 16:34:19');
+(30, 2, 25, 6, 4, 1770065304, 'Manual', 'MAN-021632-38', 'Confirmado', 1450.00, 250.00, 0.00, '', NULL, NULL, '2026-02-02 16:32:53', '2026-02-02 16:33:40', '2026-02-02 16:34:19'),
+(39, 6, 34, 21, 12, 1770089378, 'Manual', 'MAN-022328-31', 'Nuevo', 3000.00, 200.00, 50.00, '', NULL, NULL, '2026-02-02 23:28:49', NULL, NULL),
+(40, 6, 35, 21, 12, 1770089683, 'Manual', 'MAN-022329-89', 'Entregado', 3000.00, 200.00, 50.00, '', NULL, NULL, '2026-02-02 23:29:14', '2026-02-02 23:29:28', '2026-02-02 23:29:28');
 
 -- --------------------------------------------------------
 
@@ -372,7 +379,9 @@ INSERT INTO `pedidos_detalle` (`id`, `pedido_id`, `producto_id`, `nombre_product
 (26, 26, 3, 'Set Luces Inalámbricas x3 + Control Remoto', 1, 1450.00, 0.00),
 (27, 27, 3, 'Set Luces Inalámbricas x3 + Control Remoto', 1, 1450.00, 0.00),
 (28, 28, 3, 'Set Luces Inalámbricas x3 + Control Remoto', 1, 1450.00, 0.00),
-(30, 30, 3, 'Set Luces Inalámbricas x3 + Control Remoto', 1, 1450.00, 0.00);
+(30, 30, 3, 'Set Luces Inalámbricas x3 + Control Remoto', 1, 1450.00, 0.00),
+(39, 39, 7, 'guineo', 1, 3000.00, 0.00),
+(40, 40, 7, 'guineo', 1, 3000.00, 0.00);
 
 -- --------------------------------------------------------
 
@@ -401,7 +410,10 @@ INSERT INTO `productos` (`id`, `empresa_id`, `sku`, `nombre`, `descripcion`, `im
 (1, 1, '122', 'reloj', 'skamdksad', '697adbba95b21.gif', 100.00, 50.00, 50, NULL),
 (2, 1, '555', 'galas', 'descr', '697add9988da9.png', 350.00, 100.00, 59, NULL),
 (3, 2, 'LAMX3', 'Set Luces Inalámbricas x3 + Control Remoto', 'Set Luces Inalámbricas x3 + Control Remoto', '698025b8cb88d.png', 1450.00, 210.00, 75, NULL),
-(4, 5, 'p1', 'pro1', 'DESCRIPCON DEL PRODUCTO 1', '69810d6dce4e5.jpeg', 100.00, 50.00, 19, NULL);
+(4, 5, 'p1', 'pro1', 'DESCRIPCON DEL PRODUCTO 1', '69810d6dce4e5.jpeg', 100.00, 50.00, 19, NULL),
+(5, 6, 'REL1', 'Reloj', 'deloj de prueba', '69814147254a8.jpeg', 20.00, 10.00, 10, NULL),
+(6, 6, 'corr', 'Correa prueba', '', NULL, 2000.00, 800.00, 10, NULL),
+(7, 6, 'anja', 'guineo', '', NULL, 3000.00, 1000.00, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -441,7 +453,10 @@ INSERT INTO `transportadoras` (`id`, `empresa_id`, `nombre`, `codigo_acceso`, `p
 (15, 2, 'CASA', NULL, NULL, 0.00, 1),
 (16, 2, 'Taxi Yorlin', NULL, NULL, 0.00, 1),
 (17, 5, 'Metro Pac', NULL, NULL, 250.00, 1),
-(18, 5, 'Vimenpaq', 'MEPA', '$2y$10$SAC7RuLVG9szzIGB6kz6xeBuEO5K1110rM1a/JkzeWOxfaGxCUzyK', 200.00, 1);
+(18, 5, 'Vimenpaq', 'MEPA', '$2y$10$SAC7RuLVG9szzIGB6kz6xeBuEO5K1110rM1a/JkzeWOxfaGxCUzyK', 200.00, 1),
+(19, 6, 'Metro Pac', NULL, NULL, 250.00, 1),
+(20, 6, 'Vimenpaq', NULL, NULL, 200.00, 1),
+(21, 6, 'Juan Express', 'JUAN', '$2y$10$mJxrJuEcFIRaIzDb3ySvOueictWO7yvThvBXuJ93EHVQofp34bLCa', 200.00, 1);
 
 -- --------------------------------------------------------
 
@@ -482,11 +497,12 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `empresa_id`, `nombre_completo`, `email`, `password_hash`, `rol`, `ultimo_login`, `activo`) VALUES
-(1, 1, 'Administrador', 'admin@srguerra.com', '$2y$10$f2tQQO3NZGHdjHtdsnxU7Ob/9oOoAT28V7.AZpdVfnycaG83EmVgW', 'SuperAdmin', '2026-02-02 16:45:17', 1),
-(2, 2, 'Angel Guerra', 'angelguerraxcode@gmail.com', '$2y$10$rF5JQ71LyoL7RsOyqkv47uBLHbqf0sJcrPnTLmKPMbBci6c25lYQO', 'Admin', '2026-02-02 16:11:31', 1),
+(1, 1, 'Administrador', 'admin@srguerra.com', '$2y$10$f2tQQO3NZGHdjHtdsnxU7Ob/9oOoAT28V7.AZpdVfnycaG83EmVgW', 'SuperAdmin', '2026-02-02 20:26:20', 1),
+(2, 2, 'Angel Guerra', 'angelguerraxcode@gmail.com', '$2y$10$rF5JQ71LyoL7RsOyqkv47uBLHbqf0sJcrPnTLmKPMbBci6c25lYQO', 'Admin', '2026-02-02 21:45:41', 1),
 (3, 3, 'Nombre Prueba', 'Prueba@prueba.com', '$2y$10$IkhdtAJGWWnVxUokP7oRVewYvOL6jxv6jeBK1XDwUV5j1W2N4wQ9S', 'Admin', NULL, 1),
 (4, 4, 'Yorlincuas', 'yorlincuas@gmail.com', '$2y$10$j2w5GjcPKAzPvos.qtUD/Ob.M.FzkVm4Xes4Daqy9JGqc63XTyE8a', 'Admin', '2026-02-01 20:49:32', 1),
-(5, 5, 'prueba', 'P@p.com', '$2y$10$SMf.6W4tNySLVh/gekpKbui7b9rJDnPwkgoEoKfFAcSENj1b6ePDa', 'Admin', '2026-02-02 16:46:48', 1);
+(5, 5, 'prueba', 'P@p.com', '$2y$10$SMf.6W4tNySLVh/gekpKbui7b9rJDnPwkgoEoKfFAcSENj1b6ePDa', 'Admin', '2026-02-02 16:46:48', 1),
+(6, 6, 'fuego', 'f@f.com', '$2y$10$vJoXA5o03aO4WqXFdXtCb.lLyya7dy5VVtUni0nODd3b7EMwAlYZq', 'Admin', '2026-02-02 20:27:23', 1);
 
 --
 -- Índices para tablas volcadas
@@ -539,14 +555,8 @@ ALTER TABLE `gastos`
 ALTER TABLE `inventario_almacen`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `idx_prod_alm` (`producto_id`,`almacen_id`),
+  ADD UNIQUE KEY `stock_unico` (`producto_id`,`almacen_id`),
   ADD KEY `fk_inv_alm` (`almacen_id`);
-
---
--- Indices de la tabla `inventario_almacenes`
---
-ALTER TABLE `inventario_almacenes`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `prod_alm` (`producto_id`,`almacen_id`);
 
 --
 -- Indices de la tabla `marketing_campanas`
@@ -559,8 +569,7 @@ ALTER TABLE `marketing_campanas`
 -- Indices de la tabla `marketing_gasto`
 --
 ALTER TABLE `marketing_gasto`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_gasto_camp` (`campana_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `pedidos`
@@ -616,25 +625,25 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `almacenes`
 --
 ALTER TABLE `almacenes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT de la tabla `compras`
 --
 ALTER TABLE `compras`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `empresas`
 --
 ALTER TABLE `empresas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `finanzas_gastos`
@@ -646,55 +655,49 @@ ALTER TABLE `finanzas_gastos`
 -- AUTO_INCREMENT de la tabla `gastos`
 --
 ALTER TABLE `gastos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `inventario_almacen`
 --
 ALTER TABLE `inventario_almacen`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
-
---
--- AUTO_INCREMENT de la tabla `inventario_almacenes`
---
-ALTER TABLE `inventario_almacenes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT de la tabla `marketing_campanas`
 --
 ALTER TABLE `marketing_campanas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `marketing_gasto`
 --
 ALTER TABLE `marketing_gasto`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos_detalle`
 --
 ALTER TABLE `pedidos_detalle`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de la tabla `transportadoras`
 --
 ALTER TABLE `transportadoras`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT de la tabla `transportadoras_pagos`
@@ -706,7 +709,7 @@ ALTER TABLE `transportadoras_pagos`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Restricciones para tablas volcadas
