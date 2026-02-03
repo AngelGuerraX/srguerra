@@ -120,5 +120,31 @@ $sql_inv = "SELECT COALESCE(SUM(stock_actual * costo_compra), 0) FROM productos 
 $stmt = $pdo->prepare($sql_inv);
 $stmt->execute([$empresa_id]);
 $valor_inventario = $stmt->fetchColumn();
+// ... (código existente de cálculo de finanzas) ...
 
+// =========================================================
+// NUEVA ACCIÓN: GUARDAR GASTO
+// =========================================================
+if (isset($_POST['action']) && $_POST['action'] == 'guardar_gasto') {
+    $desc = $_POST['descripcion'];
+    $monto = $_POST['monto'];
+    $fecha = $_POST['fecha'];
+    $cat = $_POST['categoria'];
+    
+    $sql = "INSERT INTO gastos (empresa_id, descripcion, monto, fecha, categoria) VALUES (?, ?, ?, ?, ?)";
+    $pdo->prepare($sql)->execute([$empresa_id, $desc, $monto, $fecha, $cat]);
+    
+    header("Location: index.php?ruta=finanzas/gastos&msg=guardado");
+    exit();
+}
+
+// =========================================================
+// NUEVA ACCIÓN: BORRAR GASTO
+// =========================================================
+if (isset($_GET['action']) && $_GET['action'] == 'borrar_gasto') {
+    $id = $_GET['id'];
+    $pdo->prepare("DELETE FROM gastos WHERE id = ? AND empresa_id = ?")->execute([$id, $empresa_id]);
+    header("Location: index.php?ruta=finanzas/gastos&msg=borrado");
+    exit();
+} 
 ?>

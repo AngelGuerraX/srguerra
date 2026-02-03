@@ -32,7 +32,8 @@
             <a href="index.php?ruta=pedidos/despacho" class="nav-link text-white">
                 <i class="fas fa-dolly me-2"></i> Despacho Masivo
             </a>
-        </li>        
+        </li>    
+           
         <li class="nav-item"> 
             <a href="index.php?ruta=inventario" class="nav-link <?php echo ($ruta_actual == 'inventario') ? 'active' : ''; ?>">
                 <i class="fas fa-boxes me-2 text-center" style="width: 25px;"></i> Inventario
@@ -58,6 +59,33 @@
                 <i class="fas fa-users me-2 text-center" style="width: 25px;"></i> Clientes
             </a>
         </li>
+
+        <li class="nav-item mb-2">
+            <a href="#finanzasSubmenu" data-bs-toggle="collapse" class="nav-link text-white align-middle px-0">
+                <i class="fs-4 fas fa-hand-holding-usd text-warning"></i> <span class="ms-1 d-none d-sm-inline">Finanzas</span>
+            </a>
+            <ul class="collapse nav flex-column ms-1" id="finanzasSubmenu" data-bs-parent="#menu">
+                
+                <li class="w-100">
+                    <a href="index.php?ruta=finanzas" class="nav-link px-0 text-white-50"> 
+                        <i class="fas fa-file-invoice me-2"></i> Reporte General
+                    </a>
+                </li>
+
+                <li class="w-100">
+                    <a href="index.php?ruta=finanzas/gastos" class="nav-link px-0 text-white-50">
+                        <i class="fas fa-receipt me-2"></i> Registrar Gastos
+                    </a>
+                </li>
+
+                <li class="w-100">
+                    <a href="index.php?ruta=finanzas/rentabilidad" class="nav-link px-0 text-warning fw-bold">
+                        <i class="fas fa-chart-pie me-2"></i> Rentabilidad / CPA
+                    </a>
+                </li>
+
+            </ul>
+        </li> 
 
         <span class="px-3 h-label mb-2 mt-4 text-white-50 small fw-bold">NEGOCIO</span>
 

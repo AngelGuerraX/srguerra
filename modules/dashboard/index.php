@@ -194,7 +194,18 @@ $ultimos_pedidos = $stmt->fetchAll();
                     Ver todos
                 </a>
             </div>
-            
+            <div class="col-md-3">
+    <div class="card bg-dark border-warning shadow-lg h-100">
+        <div class="card-body text-center">
+            <h6 class="text-warning text-uppercase mb-3">Inteligencia de Negocios</h6>
+            <i class="fas fa-chart-line fa-3x text-white mb-3 opacity-50"></i>
+            <p class="text-muted small">Analiza tu CPA Real y el dinero perdido en devoluciones.</p>
+            <a href="index.php?ruta=finanzas/rentabilidad" class="btn btn-outline-warning w-100 fw-bold">
+                Ver Rentabilidad Real
+            </a>
+        </div>
+    </div>
+</div>
             <div class="table-responsive">
                 <table class="table table-dark-custom align-middle mb-0">
                     <thead>
