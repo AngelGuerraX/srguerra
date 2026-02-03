@@ -4,7 +4,7 @@
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-// Validar Sesión de Admin
+// 1. Validar Sesión de Admin
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: index.php?ruta=login");
     exit();
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
         try {
             $pdo->beginTransaction();
 
-            // 1. GESTIONAR CLIENTE
+            // A. GESTIONAR CLIENTE
             $telefono = trim($_POST['cliente_telefono']);
             $nombre = trim($_POST['cliente_nombre']);
             $provincia = $_POST['cliente_provincia'];
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 $cliente_id = $pdo->lastInsertId();
             }
 
-            // 2. CREAR PEDIDO
+            // B. CREAR PEDIDO
             $num_orden = "MAN-" . date('dHi') . "-" . rand(10, 99);
             $shopify_fake_id = time() + rand(1, 1000);
 
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
 
             $pedido_id = $pdo->lastInsertId();
 
-            // 3. GUARDAR DETALLE
+            // C. GUARDAR DETALLE
             $prod_id = !empty($_POST['producto_id']) ? $_POST['producto_id'] : NULL;
             $prod_nombre = !empty($_POST['nombre_producto_texto']) ? $_POST['nombre_producto_texto'] : 'Producto Manual';
             $cantidad = $_POST['cantidad'];
@@ -93,8 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
             $stmt = $pdo->prepare("INSERT INTO pedidos_detalle (pedido_id, producto_id, nombre_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$pedido_id, $prod_id, $prod_nombre, $cantidad, $precio]);
 
-            // 4. LÓGICA DE INVENTARIO (DESCONTAR AL CREAR)
-            // Solo si se seleccionó producto y almacén en la creación
+            // D. LÓGICA DE INVENTARIO (DESCONTAR AL CREAR)
             if ($prod_id && $alm_id) {
                 // Verificar Stock
                 $stmt = $pdo->prepare("SELECT cantidad FROM inventario_almacen WHERE producto_id = ? AND almacen_id = ?");
@@ -142,7 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
 
             // 2. LÓGICA DE RETORNO DE INVENTARIO (Check-in en Almacén)
             // Solo si el NUEVO estado es 'Devuelto' y antes NO lo era.
-            // Esto cubre si viene de 'Rechazado' (del chofer) o de 'En Ruta'.
             
             if ($nuevo_estado == 'Devuelto') {
                 
@@ -184,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
     }
 
     // =========================================================
-    // CASO 4: ASIGNAR LOGÍSTICA (DESCUENTA STOCK SI NO TENÍA)
+    // CASO 4: ASIGNAR O CAMBIAR LOGÍSTICA (CORREGIDO)
     // =========================================================
     elseif ($action == 'asignar_logistica') {
         $pedido_id = $_POST['pedido_id'];
@@ -194,33 +192,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
         try {
             $pdo->beginTransaction();
 
-            // 1. Obtener datos anteriores
+            // 1. Obtener datos anteriores (Almacén viejo)
             $stmt_old = $pdo->prepare("SELECT almacen_id FROM pedidos WHERE id = ?");
             $stmt_old->execute([$pedido_id]);
             $old_data = $stmt_old->fetch();
+            $old_alm_id = $old_data['almacen_id'];
 
-            // 2. Lógica de DESCUENTO DE STOCK (Si antes no tenía almacén y ahora sí)
-            if (empty($old_data['almacen_id']) && !empty($alm_id)) {
-                $stmt_items = $pdo->prepare("SELECT producto_id, cantidad FROM pedidos_detalle WHERE pedido_id = ?");
-                $stmt_items->execute([$pedido_id]);
-                $items = $stmt_items->fetchAll();
+            // 2. OBTENER ITEMS DEL PEDIDO
+            $stmt_items = $pdo->prepare("SELECT producto_id, cantidad FROM pedidos_detalle WHERE pedido_id = ?");
+            $stmt_items->execute([$pedido_id]);
+            $items = $stmt_items->fetchAll();
 
+            // 3. LÓGICA DE MOVIMIENTO DE STOCK
+            // Escenario A: Cambiar de un Almacén X a un Almacén Y (Devolver a X, Restar a Y)
+            if (!empty($old_alm_id) && !empty($alm_id) && $old_alm_id != $alm_id) {
                 foreach ($items as $item) {
                     if ($item['producto_id'] > 0) {
-                        // Restar del Almacén (Insertar negativo si no existe, o actualizar restando)
-                        $sql_inv = "INSERT INTO inventario_almacen (producto_id, almacen_id, cantidad) 
-                                    VALUES (?, ?, -?) 
-                                    ON DUPLICATE KEY UPDATE cantidad = cantidad - ?";
-                        $pdo->prepare($sql_inv)->execute([$item['producto_id'], $alm_id, $item['cantidad'], $item['cantidad']]);
-
-                        // Restar del Global
+                        // Devolver al Viejo
+                        $pdo->prepare("UPDATE inventario_almacen SET cantidad = cantidad + ? WHERE producto_id = ? AND almacen_id = ?")
+                            ->execute([$item['cantidad'], $item['producto_id'], $old_alm_id]);
+                        
+                        // Descontar del Nuevo
+                        $pdo->prepare("INSERT INTO inventario_almacen (producto_id, almacen_id, cantidad) VALUES (?, ?, -?) ON DUPLICATE KEY UPDATE cantidad = cantidad - ?")
+                            ->execute([$item['producto_id'], $alm_id, $item['cantidad'], $item['cantidad']]);
+                    }
+                }
+            }
+            // Escenario B: Asignar por primera vez (Estaba vacío -> Nuevo Almacén)
+            elseif (empty($old_alm_id) && !empty($alm_id)) {
+                foreach ($items as $item) {
+                    if ($item['producto_id'] > 0) {
+                        // Descontar del Nuevo Almacén
+                        $pdo->prepare("INSERT INTO inventario_almacen (producto_id, almacen_id, cantidad) VALUES (?, ?, -?) ON DUPLICATE KEY UPDATE cantidad = cantidad - ?")
+                            ->execute([$item['producto_id'], $alm_id, $item['cantidad'], $item['cantidad']]);
+                        
+                        // Descontar del Global (Solo se descuenta del global la primera vez)
                         $pdo->prepare("UPDATE productos SET stock_actual = stock_actual - ? WHERE id = ?")
                             ->execute([$item['cantidad'], $item['producto_id']]);
                     }
                 }
             }
+            // Escenario C: Quitar Almacén (Estaba asignado -> Se pone en blanco)
+            // Devolvemos el stock al almacén original para que no se pierda
+            elseif (!empty($old_alm_id) && empty($alm_id)) {
+                 foreach ($items as $item) {
+                    if ($item['producto_id'] > 0) {
+                        // Devolver al Viejo
+                        $pdo->prepare("UPDATE inventario_almacen SET cantidad = cantidad + ? WHERE producto_id = ? AND almacen_id = ?")
+                            ->execute([$item['cantidad'], $item['producto_id'], $old_alm_id]);
+                        
+                        // Devolver al Global
+                        $pdo->prepare("UPDATE productos SET stock_actual = stock_actual + ? WHERE id = ?")
+                            ->execute([$item['cantidad'], $item['producto_id']]);
+                    }
+                }
+            }
 
-            // 3. Recalcular costos
+            // 4. Recalcular costos
             $costo_envio = 0;
             $costo_empaque = 0;
 
@@ -236,7 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
                 $costo_empaque = $stmt->fetchColumn() ?: 0;
             }
 
-            // 4. Actualizar Pedido
+            // 5. Actualizar Pedido
             $sql = "UPDATE pedidos SET transportadora_id = ?, almacen_id = ?, costo_envio_real = ?, costo_empaque_real = ?, fecha_actualizacion = NOW() WHERE id = ? AND empresa_id = ?";
             $pdo->prepare($sql)->execute([$trans_id, $alm_id, $costo_envio, $costo_empaque, $pedido_id, $empresa_id]);
 
@@ -317,6 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($action)) {
     }
 
 } else {
+    // Si entran directo al archivo sin POST
     header("Location: index.php");
     exit();
 }
