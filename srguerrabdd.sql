@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 03-02-2026 a las 16:31:36
+-- Tiempo de generación: 04-02-2026 a las 07:37:46
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -136,7 +136,9 @@ CREATE TABLE `compras` (
 
 INSERT INTO `compras` (`id`, `empresa_id`, `producto_id`, `almacen_id`, `cantidad`, `costo_unitario`, `proveedor`, `fecha_compra`) VALUES
 (1, 5, 4, 11, 10, 50.00, 'I AM IRONMAN', '2026-02-02 16:59:08'),
-(2, 6, 6, 12, 1, 800.00, '', '2026-02-02 23:16:11');
+(2, 6, 6, 12, 1, 800.00, '', '2026-02-02 23:16:11'),
+(3, 6, 5, 12, 10, 10.00, '', '2026-02-03 11:41:43'),
+(4, 5, 4, 11, 1, 50.00, '', '2026-02-03 19:15:00');
 
 -- --------------------------------------------------------
 
@@ -171,6 +173,20 @@ INSERT INTO `empresas` (`id`, `nombre_comercial`, `razon_social`, `rnc`, `telefo
 (4, 'Todoclick', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Gratis', 'Activo', '2026-02-01 20:48:24'),
 (5, 'demo', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Gratis', 'Activo', '2026-02-02 16:46:39'),
 (6, 'fuego', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Enterprise', 'Activo', '2026-02-02 20:27:09');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `empresa_transportadora_rel`
+--
+
+CREATE TABLE `empresa_transportadora_rel` (
+  `id` int(11) NOT NULL,
+  `empresa_id` int(11) NOT NULL,
+  `transportadora_id` int(11) NOT NULL,
+  `precio_personalizado` decimal(10,2) DEFAULT NULL,
+  `activo` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -232,9 +248,9 @@ INSERT INTO `inventario_almacen` (`id`, `producto_id`, `almacen_id`, `cantidad`,
 (8, 3, 8, 27, NULL),
 (9, 3, 9, 12, NULL),
 (16, 3, 10, 12, NULL),
-(23, 4, 11, 19, NULL),
-(32, 5, 12, 10, NULL),
-(34, 6, 12, 10, NULL),
+(23, 4, 11, 14, NULL),
+(32, 5, 12, 17, NULL),
+(34, 6, 12, 5, NULL),
 (37, 7, 12, 0, NULL);
 
 -- --------------------------------------------------------
@@ -317,10 +333,10 @@ INSERT INTO `pedidos` (`id`, `empresa_id`, `cliente_id`, `transportadora_id`, `a
 (9, 1, 1, 5, 2, 1769965955, 'Manual', 'MAN-011311-66', 'Entregado', 100.00, 350.00, 15.00, ' | Chofer: todo si | Devolución: Motivo: Cliente no estaba. anjaaaaaaaaaaa | Chofer: ', NULL, NULL, '2026-02-01 13:11:17', '2026-02-01 15:15:30', '2026-02-01 15:11:36'),
 (10, 4, 4, 12, 7, 1769994535, 'Manual', 'MAN-012055-42', 'Entregado', 1450.00, 250.00, 0.00, ' | Chofer: El quedo bacano', NULL, NULL, '2026-02-01 20:55:48', '2026-02-01 20:57:19', NULL),
 (11, 2, 6, 6, 4, 1770007330, 'Manual', 'MAN-020030-54', 'Entregado', 5800.00, 0.00, 0.00, 'Regadas con yorlin', NULL, NULL, '2026-02-02 00:30:02', '2026-02-02 00:30:52', '2026-02-02 00:30:30'),
-(12, 2, 7, 13, 8, 1770008182, 'Manual', 'MAN-020040-98', 'En Ruta', 1450.00, 300.00, 44.00, '', NULL, NULL, '2026-02-02 00:40:19', NULL, NULL),
-(13, 2, 8, 13, 8, 1770007972, 'Manual', 'MAN-020041-99', 'En Ruta', 1450.00, 300.00, 44.00, '', NULL, NULL, '2026-02-02 00:41:36', NULL, NULL),
-(14, 2, 9, 13, 8, 1770007649, 'Manual', 'MAN-020043-70', 'En Ruta', 1450.00, 300.00, 44.00, '', NULL, NULL, '2026-02-02 00:43:05', NULL, NULL),
-(15, 2, 10, 13, 8, 1770007590, 'Manual', 'MAN-020044-41', 'En Ruta', 1450.00, 0.00, 44.00, '', NULL, NULL, '2026-02-02 00:44:22', NULL, '2026-02-02 00:45:49'),
+(12, 2, 7, 13, 8, 1770008182, 'Manual', 'MAN-020040-98', 'Entregado', 1450.00, 300.00, 44.00, ' | ', NULL, NULL, '2026-02-02 00:40:19', '2026-02-03 12:58:41', NULL),
+(13, 2, 8, 13, 8, 1770007972, 'Manual', 'MAN-020041-99', 'Rechazado', 1450.00, 300.00, 44.00, ' | ', 'Sin dinero', NULL, '2026-02-02 00:41:36', NULL, '2026-02-03 12:58:08'),
+(14, 2, 9, 13, 8, 1770007649, 'Manual', 'MAN-020043-70', 'Rechazado', 1450.00, 300.00, 44.00, ' | ', 'Rechazó producto', NULL, '2026-02-02 00:43:05', NULL, '2026-02-03 12:49:09'),
+(15, 2, 10, 13, 8, 1770007590, 'Manual', 'MAN-020044-41', 'Rechazado', 1450.00, 0.00, 44.00, ' | ', 'Rechazó producto', NULL, '2026-02-02 00:44:22', NULL, '2026-02-03 12:49:01'),
 (16, 2, 11, 14, 8, 1770008186, 'Manual', 'MAN-020054-44', 'Nuevo', 1450.00, 350.00, 44.00, '', NULL, NULL, '2026-02-02 00:54:40', NULL, NULL),
 (17, 2, 12, 14, 8, 1770008272, 'Manual', 'MAN-020055-69', 'Nuevo', 1450.00, 350.00, 44.00, '', NULL, NULL, '2026-02-02 00:55:47', NULL, NULL),
 (18, 2, 13, 15, 4, 1770009150, 'Manual', 'MAN-020057-14', 'Nuevo', 1450.00, 0.00, 0.00, '', NULL, NULL, '2026-02-02 00:57:43', '2026-02-02 00:58:08', NULL),
@@ -335,8 +351,23 @@ INSERT INTO `pedidos` (`id`, `empresa_id`, `cliente_id`, `transportadora_id`, `a
 (27, 2, 22, 6, 4, 1770010208, 'Manual', 'MAN-020114-94', 'Confirmado', 1450.00, 250.00, 0.00, '', NULL, NULL, '2026-02-02 01:14:14', NULL, '2026-02-02 16:37:24'),
 (28, 2, 23, 14, 8, 1770009849, 'Manual', 'MAN-020120-11', 'En Ruta', 1450.00, 350.00, 44.00, '', NULL, NULL, '2026-02-02 01:20:36', NULL, '2026-02-02 02:30:28'),
 (30, 2, 25, 6, 4, 1770065304, 'Manual', 'MAN-021632-38', 'Confirmado', 1450.00, 250.00, 0.00, '', NULL, NULL, '2026-02-02 16:32:53', '2026-02-02 16:33:40', '2026-02-02 16:34:19'),
-(39, 6, 34, 21, 12, 1770089378, 'Manual', 'MAN-022328-31', 'Nuevo', 3000.00, 200.00, 50.00, '', NULL, NULL, '2026-02-02 23:28:49', NULL, NULL),
-(40, 6, 35, 21, 12, 1770089683, 'Manual', 'MAN-022329-89', 'Entregado', 3000.00, 200.00, 50.00, '', NULL, NULL, '2026-02-02 23:29:14', '2026-02-02 23:29:28', '2026-02-02 23:29:28');
+(39, 6, 34, 21, 12, 1770089378, 'Manual', 'MAN-022328-31', 'Entregado', 3000.00, 200.00, 50.00, '', NULL, NULL, '2026-02-02 23:28:49', '2026-02-03 11:57:38', '2026-02-03 11:57:38'),
+(40, 6, 35, 21, 12, 1770089683, 'Manual', 'MAN-022329-89', 'Entregado', 3000.00, 200.00, 50.00, '', NULL, NULL, '2026-02-02 23:29:14', '2026-02-02 23:29:28', '2026-02-02 23:29:28'),
+(41, 6, 34, 21, 12, 1770135350, 'Manual', 'MAN-031200-72', 'En Ruta', 2000.00, 200.00, 50.00, '', NULL, NULL, '2026-02-03 12:00:54', NULL, '2026-02-03 12:01:35'),
+(42, 5, 31, 17, 11, 1770160210, 'Manual', 'MAN-031907-29', 'Entregado', 100.00, 250.00, 50.00, ' | ', NULL, NULL, '2026-02-03 19:07:38', '2026-02-04 00:53:37', '2026-02-04 00:53:37'),
+(43, 5, 27, 17, 11, 1770161137, 'Manual', 'MAN-031916-25', 'Devuelto', 100.00, 250.00, 50.00, ' | ', 'Sin dinero', NULL, '2026-02-03 19:16:36', NULL, '2026-02-03 19:19:49'),
+(44, 5, 31, 17, 11, 1770180953, 'Manual', 'MAN-040052-78', 'Devuelto', 100.00, 250.00, 50.00, ' | ', 'Rechazó producto', NULL, '2026-02-04 00:52:10', NULL, '2026-02-04 00:53:16'),
+(45, 5, 29, 17, 11, 1770181763, 'Manual', 'MAN-040053-16', 'Entregado', 100.00, 250.00, 50.00, ' | ', NULL, NULL, '2026-02-04 00:53:53', '2026-02-04 00:54:21', '2026-02-04 00:54:02'),
+(46, 5, 30, 17, 11, 1770182540, 'Manual', 'MAN-040115-93', 'Entregado', 100.00, 250.00, 50.00, '', NULL, NULL, '2026-02-04 01:15:20', '2026-02-04 01:22:28', '2026-02-04 01:22:28'),
+(47, 5, 30, 17, 11, 1770182671, 'Manual', 'MAN-040124-22', 'Entregado', 100.00, 250.00, 50.00, ' | ', NULL, NULL, '2026-02-04 01:24:07', '2026-02-04 01:32:27', '2026-02-04 01:24:14'),
+(48, 6, 33, 17, 12, 1770184695, 'Manual', 'MAN-040146-73', 'Entregado', 2000.00, 250.00, 50.00, ' | ', NULL, NULL, '2026-02-04 01:46:40', '2026-02-04 01:51:03', '2026-02-04 01:46:50'),
+(50, 6, 33, 17, 12, 1770184393, 'Manual', 'MAN-040153-83', 'Nuevo', 20.00, 250.00, 50.00, '', NULL, NULL, '2026-02-04 01:53:03', NULL, NULL),
+(51, 6, 33, 17, 12, 1770185015, 'Manual', 'MAN-040153-20', 'Confirmado', 20.00, 250.00, 50.00, '', NULL, NULL, '2026-02-04 01:53:03', NULL, '2026-02-04 02:05:18'),
+(52, 6, 32, 17, 12, 1770184727, 'Manual', 'MAN-040156-51', 'Confirmado', 2000.00, 0.00, 50.00, '', NULL, NULL, '2026-02-04 01:56:32', NULL, '2026-02-04 02:05:12'),
+(53, 6, 34, 17, 12, 1770184632, 'Manual', 'MAN-040156-33', 'Cancelado', 2000.00, 0.00, 50.00, '', NULL, NULL, '2026-02-04 01:56:45', NULL, '2026-02-04 02:24:53'),
+(54, 6, 33, 17, 12, 1770185364, 'Manual', 'MAN-040156-71', 'Confirmado', 20.00, 0.00, 50.00, '', NULL, NULL, '2026-02-04 01:56:55', NULL, '2026-02-04 02:05:06'),
+(55, 5, 30, 17, 11, 1770185943, 'Manual', 'MAN-040204-38', 'Confirmado', 100.00, 0.00, 50.00, '', NULL, NULL, '2026-02-04 02:04:37', NULL, '2026-02-04 02:04:41'),
+(56, 5, 29, 17, 11, 1770186072, 'Manual', 'MAN-040204-51', 'Confirmado', 100.00, 0.00, 50.00, '', NULL, NULL, '2026-02-04 02:04:51', NULL, '2026-02-04 02:04:56');
 
 -- --------------------------------------------------------
 
@@ -381,7 +412,22 @@ INSERT INTO `pedidos_detalle` (`id`, `pedido_id`, `producto_id`, `nombre_product
 (28, 28, 3, 'Set Luces Inalámbricas x3 + Control Remoto', 1, 1450.00, 0.00),
 (30, 30, 3, 'Set Luces Inalámbricas x3 + Control Remoto', 1, 1450.00, 0.00),
 (39, 39, 7, 'guineo', 1, 3000.00, 0.00),
-(40, 40, 7, 'guineo', 1, 3000.00, 0.00);
+(40, 40, 7, 'guineo', 1, 3000.00, 0.00),
+(41, 41, 6, 'Correa prueba', 1, 2000.00, 0.00),
+(42, 42, 4, 'pro1', 1, 100.00, 0.00),
+(43, 43, 4, 'pro1', 1, 100.00, 0.00),
+(44, 44, 4, 'pro1', 1, 100.00, 0.00),
+(45, 45, 4, 'pro1', 1, 100.00, 0.00),
+(46, 46, 4, 'pro1', 1, 100.00, 0.00),
+(47, 47, 4, 'pro1', 1, 100.00, 0.00),
+(48, 48, 6, 'Correa prueba', 1, 2000.00, 0.00),
+(50, 50, 5, 'Reloj', 1, 20.00, 0.00),
+(51, 51, 5, 'Reloj', 1, 20.00, 0.00),
+(52, 52, 6, 'Correa prueba', 1, 2000.00, 0.00),
+(53, 53, 6, 'Correa prueba', 1, 2000.00, 0.00),
+(54, 54, 5, 'Reloj', 1, 20.00, 0.00),
+(55, 55, 4, 'pro1', 1, 100.00, 0.00),
+(56, 56, 4, 'pro1', 1, 100.00, 0.00);
 
 -- --------------------------------------------------------
 
@@ -410,9 +456,9 @@ INSERT INTO `productos` (`id`, `empresa_id`, `sku`, `nombre`, `descripcion`, `im
 (1, 1, '122', 'reloj', 'skamdksad', '697adbba95b21.gif', 100.00, 50.00, 50, NULL),
 (2, 1, '555', 'galas', 'descr', '697add9988da9.png', 350.00, 100.00, 59, NULL),
 (3, 2, 'LAMX3', 'Set Luces Inalámbricas x3 + Control Remoto', 'Set Luces Inalámbricas x3 + Control Remoto', '698025b8cb88d.png', 1450.00, 210.00, 75, NULL),
-(4, 5, 'p1', 'pro1', 'DESCRIPCON DEL PRODUCTO 1', '69810d6dce4e5.jpeg', 100.00, 50.00, 19, NULL),
-(5, 6, 'REL1', 'Reloj', 'deloj de prueba', '69814147254a8.jpeg', 20.00, 10.00, 10, NULL),
-(6, 6, 'corr', 'Correa prueba', '', NULL, 2000.00, 800.00, 10, NULL),
+(4, 5, 'p1', 'pro1', 'DESCRIPCON DEL PRODUCTO 1', '69810d6dce4e5.jpeg', 100.00, 50.00, 14, NULL),
+(5, 6, 'REL1', 'Reloj', 'deloj de prueba', '69814147254a8.jpeg', 20.00, 10.00, 17, NULL),
+(6, 6, 'corr', 'Correa prueba', '', NULL, 2000.00, 800.00, 5, NULL),
 (7, 6, 'anja', 'guineo', '', NULL, 3000.00, 1000.00, 0, NULL);
 
 -- --------------------------------------------------------
@@ -425,38 +471,40 @@ CREATE TABLE `transportadoras` (
   `id` int(11) NOT NULL,
   `empresa_id` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
   `codigo_acceso` varchar(50) DEFAULT NULL,
   `pin_acceso` varchar(255) DEFAULT NULL,
   `costo_envio_fijo` decimal(10,2) DEFAULT 0.00,
-  `activo` tinyint(1) DEFAULT 1
+  `activo` tinyint(1) DEFAULT 1,
+  `es_publica` tinyint(1) DEFAULT 0 COMMENT '1=Visible para todas las empresas'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `transportadoras`
 --
 
-INSERT INTO `transportadoras` (`id`, `empresa_id`, `nombre`, `codigo_acceso`, `pin_acceso`, `costo_envio_fijo`, `activo`) VALUES
-(1, 1, 'Metro Pac', NULL, NULL, 250.00, 1),
-(2, 1, 'Vimenpaq', NULL, NULL, 200.00, 1),
-(3, 1, 'Caribe Tours', NULL, NULL, 300.00, 1),
-(4, 1, 'Mensajero Privado', NULL, NULL, 150.00, 1),
-(5, 1, 'Flash Cargo', 'FLASH', '$2y$10$rhnG5Er1IPHCjtzsC9eoqeMzXfg1JuYhN5zIvRS3xlY0GByMj4OoK', 350.00, 1),
-(6, 2, 'GUERRASHIPING', 'GS', '$2y$10$1HCnoqg9LXpU0b8asaEcOeeYx4O0cbKWG9XZg459bUtEtDJBZsBba', 250.00, 1),
-(7, 2, 'Anja', NULL, NULL, 200.00, 0),
-(8, 3, 'Metro Pac', NULL, NULL, 250.00, 1),
-(9, 3, 'Vimenpaq', NULL, NULL, 200.00, 1),
-(10, 4, 'Metro Pac', NULL, NULL, 250.00, 1),
-(11, 4, 'Vimenpaq', NULL, NULL, 200.00, 1),
-(12, 4, 'Lixandro', 'LIX1', '$2y$10$AtacLy5hlJy4Fx/.Liu0GOxqm8wZCRh5yLBit8bIPZIXhHpg9FzCy', 250.00, 1),
-(13, 2, 'FLASH CARGO', 'FL', '$2y$10$bewm6G1G9YIXpoVihdf.r.Yctjhe32IiVvjkffzthYatrx28ne8CG', 300.00, 1),
-(14, 2, 'GINTRACON', NULL, NULL, 350.00, 1),
-(15, 2, 'CASA', NULL, NULL, 0.00, 1),
-(16, 2, 'Taxi Yorlin', NULL, NULL, 0.00, 1),
-(17, 5, 'Metro Pac', NULL, NULL, 250.00, 1),
-(18, 5, 'Vimenpaq', 'MEPA', '$2y$10$SAC7RuLVG9szzIGB6kz6xeBuEO5K1110rM1a/JkzeWOxfaGxCUzyK', 200.00, 1),
-(19, 6, 'Metro Pac', NULL, NULL, 250.00, 1),
-(20, 6, 'Vimenpaq', NULL, NULL, 200.00, 1),
-(21, 6, 'Juan Express', 'JUAN', '$2y$10$mJxrJuEcFIRaIzDb3ySvOueictWO7yvThvBXuJ93EHVQofp34bLCa', 200.00, 1);
+INSERT INTO `transportadoras` (`id`, `empresa_id`, `nombre`, `telefono`, `codigo_acceso`, `pin_acceso`, `costo_envio_fijo`, `activo`, `es_publica`) VALUES
+(1, 1, 'Metro Pac', NULL, NULL, NULL, 250.00, 1, 0),
+(2, 1, 'Vimenpaq', NULL, NULL, NULL, 200.00, 1, 0),
+(3, 1, 'Caribe Tours', NULL, NULL, NULL, 300.00, 1, 0),
+(4, 1, 'Mensajero Privado', NULL, NULL, NULL, 150.00, 1, 0),
+(5, 1, 'Flash Cargo', NULL, 'FLASH', '$2y$10$rhnG5Er1IPHCjtzsC9eoqeMzXfg1JuYhN5zIvRS3xlY0GByMj4OoK', 350.00, 1, 0),
+(6, 2, 'GUERRASHIPING', NULL, 'GS', '$2y$10$1HCnoqg9LXpU0b8asaEcOeeYx4O0cbKWG9XZg459bUtEtDJBZsBba', 250.00, 1, 0),
+(7, 2, 'Anja', NULL, NULL, NULL, 200.00, 0, 0),
+(8, 3, 'Metro Pac', NULL, NULL, NULL, 250.00, 1, 0),
+(9, 3, 'Vimenpaq', NULL, NULL, NULL, 200.00, 1, 0),
+(10, 4, 'Metro Pac', NULL, NULL, NULL, 250.00, 1, 0),
+(11, 4, 'Vimenpaq', NULL, NULL, NULL, 200.00, 1, 0),
+(12, 4, 'Lixandro', NULL, 'LIX1', '$2y$10$AtacLy5hlJy4Fx/.Liu0GOxqm8wZCRh5yLBit8bIPZIXhHpg9FzCy', 250.00, 1, 0),
+(13, 2, 'FLASH CARGO', NULL, 'FL', '$2y$10$bewm6G1G9YIXpoVihdf.r.Yctjhe32IiVvjkffzthYatrx28ne8CG', 300.00, 1, 0),
+(14, 2, 'GINTRACON', NULL, NULL, NULL, 350.00, 1, 0),
+(15, 2, 'CASA', NULL, NULL, NULL, 0.00, 1, 0),
+(16, 2, 'Taxi Yorlin', NULL, NULL, NULL, 0.00, 1, 0),
+(17, 5, 'demo trans1', NULL, 'DEMO1', '$2y$10$zXxsY7XQiUyTeb8dsYC/xOrXbh7dnnkODDvTFYCcCnwEzxAMsP1C6', 250.00, 1, 1),
+(18, 5, 'Vimenpaq', NULL, 'MEPA', '$2y$10$SAC7RuLVG9szzIGB6kz6xeBuEO5K1110rM1a/JkzeWOxfaGxCUzyK', 200.00, 1, 0),
+(19, 6, 'Metro Pac', NULL, NULL, NULL, 250.00, 1, 0),
+(20, 6, 'Vimenpaq', NULL, NULL, NULL, 200.00, 1, 0),
+(21, 6, 'Juan Express', NULL, 'JUAN', '$2y$10$mJxrJuEcFIRaIzDb3ySvOueictWO7yvThvBXuJ93EHVQofp34bLCa', 200.00, 1, 0);
 
 -- --------------------------------------------------------
 
@@ -474,6 +522,15 @@ CREATE TABLE `transportadoras_pagos` (
   `nota` text DEFAULT NULL,
   `creado_por` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `transportadoras_pagos`
+--
+
+INSERT INTO `transportadoras_pagos` (`id`, `empresa_id`, `transportadora_id`, `fecha`, `monto`, `referencia`, `nota`, `creado_por`) VALUES
+(1, 0, 17, '2026-02-04 01:13:42', 500.00, 'primer pago', 'Pago el dia tal a tal hora', NULL),
+(2, 0, 17, '2026-02-04 01:22:51', 250.00, '', '', NULL),
+(3, 6, 17, '2026-02-04 02:17:41', 250.00, '', '', NULL);
 
 -- --------------------------------------------------------
 
@@ -497,12 +554,13 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `empresa_id`, `nombre_completo`, `email`, `password_hash`, `rol`, `ultimo_login`, `activo`) VALUES
-(1, 1, 'Administrador', 'admin@srguerra.com', '$2y$10$f2tQQO3NZGHdjHtdsnxU7Ob/9oOoAT28V7.AZpdVfnycaG83EmVgW', 'SuperAdmin', '2026-02-02 20:26:20', 1),
-(2, 2, 'Angel Guerra', 'angelguerraxcode@gmail.com', '$2y$10$rF5JQ71LyoL7RsOyqkv47uBLHbqf0sJcrPnTLmKPMbBci6c25lYQO', 'Admin', '2026-02-02 21:45:41', 1),
+(1, 1, 'Administrador', 'admin@srguerra.com', '$2y$10$f2tQQO3NZGHdjHtdsnxU7Ob/9oOoAT28V7.AZpdVfnycaG83EmVgW', 'SuperAdmin', '2026-02-04 00:49:49', 1),
+(2, 2, 'Angel Guerra', 'angelguerraxcode@gmail.com', '$2y$10$rF5JQ71LyoL7RsOyqkv47uBLHbqf0sJcrPnTLmKPMbBci6c25lYQO', 'Admin', '2026-02-04 02:34:42', 1),
 (3, 3, 'Nombre Prueba', 'Prueba@prueba.com', '$2y$10$IkhdtAJGWWnVxUokP7oRVewYvOL6jxv6jeBK1XDwUV5j1W2N4wQ9S', 'Admin', NULL, 1),
 (4, 4, 'Yorlincuas', 'yorlincuas@gmail.com', '$2y$10$j2w5GjcPKAzPvos.qtUD/Ob.M.FzkVm4Xes4Daqy9JGqc63XTyE8a', 'Admin', '2026-02-01 20:49:32', 1),
-(5, 5, 'prueba', 'P@p.com', '$2y$10$SMf.6W4tNySLVh/gekpKbui7b9rJDnPwkgoEoKfFAcSENj1b6ePDa', 'Admin', '2026-02-02 16:46:48', 1),
-(6, 6, 'fuego', 'f@f.com', '$2y$10$vJoXA5o03aO4WqXFdXtCb.lLyya7dy5VVtUni0nODd3b7EMwAlYZq', 'Admin', '2026-02-02 20:27:23', 1);
+(5, 5, 'prueba', 'P@p.com', '$2y$10$SMf.6W4tNySLVh/gekpKbui7b9rJDnPwkgoEoKfFAcSENj1b6ePDa', 'Admin', '2026-02-04 00:51:33', 1),
+(6, 6, 'fuego', 'f@f.com', '$2y$10$vJoXA5o03aO4WqXFdXtCb.lLyya7dy5VVtUni0nODd3b7EMwAlYZq', 'Admin', '2026-02-02 20:27:23', 1),
+(7, 6, 'agua', 'a@a.com', '$2y$10$yMF1OliFtlcpBWjZUdF.ou2pzVqaljebnuKwDVeRgkNKnj1KMA8lq', 'Vendedor', '2026-02-04 02:14:31', 1);
 
 --
 -- Índices para tablas volcadas
@@ -534,6 +592,12 @@ ALTER TABLE `compras`
 -- Indices de la tabla `empresas`
 --
 ALTER TABLE `empresas`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `empresa_transportadora_rel`
+--
+ALTER TABLE `empresa_transportadora_rel`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -637,13 +701,19 @@ ALTER TABLE `clientes`
 -- AUTO_INCREMENT de la tabla `compras`
 --
 ALTER TABLE `compras`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `empresas`
 --
 ALTER TABLE `empresas`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT de la tabla `empresa_transportadora_rel`
+--
+ALTER TABLE `empresa_transportadora_rel`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `finanzas_gastos`
@@ -661,7 +731,7 @@ ALTER TABLE `gastos`
 -- AUTO_INCREMENT de la tabla `inventario_almacen`
 --
 ALTER TABLE `inventario_almacen`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT de la tabla `marketing_campanas`
@@ -679,13 +749,13 @@ ALTER TABLE `marketing_gasto`
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos_detalle`
 --
 ALTER TABLE `pedidos_detalle`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
@@ -703,13 +773,13 @@ ALTER TABLE `transportadoras`
 -- AUTO_INCREMENT de la tabla `transportadoras_pagos`
 --
 ALTER TABLE `transportadoras_pagos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Restricciones para tablas volcadas
