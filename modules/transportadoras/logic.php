@@ -19,21 +19,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // ---------------------------------------------------------
     // A) CREAR NUEVA TRANSPORTADORA
     // ---------------------------------------------------------
-    if ($action == 'crear_transportadora') {
-        $nombre = trim($_POST['nombre']);
-        $costo  = $_POST['costo_envio_fijo'];
+    // modules/transportadoras/logic.php
 
-        try {
-            // Guardar en BD (Por defecto activo = 1)
-            $stmt = $pdo->prepare("INSERT INTO transportadoras (empresa_id, nombre, costo_envio_fijo, activo) VALUES (?, ?, ?, 1)");
-            $stmt->execute([$empresa_id, $nombre, $costo]);
-
-            header("Location: index.php?ruta=transportadoras&msg=creado");
-            exit();
-
-        } catch (Exception $e) {
-            die("Error al crear: " . $e->getMessage());
+    if ($_POST['action'] == 'crear') {
+        $nombre = $_POST['nombre'];
+        $telefono = $_POST['telefono']; // Si ya agregaste esta columna
+        $costo = $_POST['costo_envio_fijo'];
+        
+        // VALIDACIÓN DE SEGURIDAD PARA CAMPO PÚBLICO
+        $es_publica = 0;
+        if (isset($_POST['es_publica']) && $_SESSION['rol'] == 'SuperAdmin') {
+            $es_publica = 1;
         }
+
+        $empresa_id = $_SESSION['empresa_id'];
+
+        $sql = "INSERT INTO transportadoras (empresa_id, nombre, telefono, costo_envio_fijo, es_publica, activo) 
+                VALUES (?, ?, ?, ?, ?, 1)";
+                
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$empresa_id, $nombre, $telefono, $costo, $es_publica]);
+
+        header("Location: index.php?ruta=transportadoras");
     }
  
   // ---------------------------------------------------------

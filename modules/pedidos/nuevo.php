@@ -4,7 +4,7 @@ $empresa_id = $_SESSION['empresa_id'];
 
 // 1. OBTENER LISTAS PARA LOS DROPDOWNS
 $almacenes = $pdo->query("SELECT * FROM almacenes WHERE empresa_id = $empresa_id AND activo = 1")->fetchAll();
-$transportadoras = $pdo->query("SELECT * FROM transportadoras WHERE activo = 1 AND empresa_id = $empresa_id")->fetchAll();
+$transportadoras = $pdo->query("SELECT * FROM transportadoras WHERE activo = 1 AND (empresa_id = $empresa_id OR es_publica = 1) ORDER BY es_publica DESC, nombre ASC")->fetchAll();
 $clientes = $pdo->query("SELECT * FROM clientes WHERE empresa_id = $empresa_id ORDER BY id DESC LIMIT 50")->fetchAll();
 $productos = $pdo->query("SELECT * FROM productos WHERE empresa_id = $empresa_id AND stock_actual > 0")->fetchAll();
 
@@ -145,11 +145,15 @@ while ($row = $q_stock->fetch(PDO::FETCH_ASSOC)) {
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="text-white small">Transportadora</label>
-                        <select name="transportadora_id" id="transporte" class="form-select bg-dark text-white border-secondary" onchange="calcularCostoEnvio()">
-                            <option value="" data-costo="0">-- Sin Asignar --</option>
-                            <?php foreach ($transportadoras as $t): ?>
-                                <option value="<?php echo $t['id']; ?>" data-costo="<?php echo $t['costo_envio_fijo']; ?>">
-                                    <?php echo $t['nombre']; ?>
+                        <select name="transportadora_id" class="form-select bg-dark text-white border-secondary">
+                            <option value="">Seleccionar...</option>
+                            <?php foreach($transportadoras as $t): ?>
+                                <option value="<?php echo $t['id']; ?>">
+                                    <?php 
+                                        // Agregamos un prefijo visual
+                                        echo ($t['es_publica'] == 1) ? '🌎 Publico - ' : '👤 '; 
+                                        echo $t['nombre']; 
+                                    ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

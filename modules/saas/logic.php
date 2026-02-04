@@ -78,4 +78,47 @@ function redirigir($url) {
     echo '</noscript>';
     exit();
 }
+// modules/saas/logic.php
+
+if ($_POST['action'] == 'crear_usuario_empresa') {
+    $empresa_id = $_POST['empresa_id'];
+    $nombre = $_POST['nombre'];
+    $email = $_POST['email'];
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Encriptar siempre
+    $rol = $_POST['rol'];
+
+    // Verificar si el email ya existe
+    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE email = ?");
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        header("Location: index.php?ruta=saas/usuarios&id=$empresa_id&error=El email ya está registrado");
+        exit();
+    }
+
+    // Insertar usuario
+    $sql = "INSERT INTO usuarios (empresa_id, nombre_completo, email, password_hash, rol, activo) VALUES (?, ?, ?, ?, ?, 1)";
+    $stmt = $pdo->prepare($sql);
+    
+    if ($stmt->execute([$empresa_id, $nombre, $email, $password, $rol])) {
+        header("Location: index.php?ruta=saas/usuarios&id=$empresa_id&msg=Usuario creado");
+    } else {
+        header("Location: index.php?ruta=saas/usuarios&id=$empresa_id&error=Error al crear usuario");
+    }
+    exit();
+}
+
+// Lógica para borrar usuario
+if (isset($_GET['action']) && $_GET['action'] == 'borrar_usuario') {
+    $id_usuario = $_GET['id'];
+    $empresa_id = $_GET['empresa_id'];
+    
+    // Evitar borrar al SuperAdmin por error
+    // Opcional: Evitar borrarte a ti mismo validando $_SESSION['user_id']
+    
+    $stmt = $pdo->prepare("DELETE FROM usuarios WHERE id = ?");
+    $stmt->execute([$id_usuario]);
+    
+    header("Location: index.php?ruta=saas/usuarios&id=$empresa_id&msg=Usuario eliminado");
+    exit();
+}
 ?>

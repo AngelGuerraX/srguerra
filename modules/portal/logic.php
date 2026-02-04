@@ -83,6 +83,19 @@ if ($_POST['action'] == 'marcar_rechazado') {
         die("Error al reportar rechazo: " . $e->getMessage());
     }
 }
+$stmt_t = $pdo->prepare("SELECT es_publica, costo_envio_fijo FROM transportadoras WHERE id = ?");
+$stmt_t->execute([$chofer_id]);
+$trans_info = $stmt_t->fetch();
+
+if ($trans_info['es_publica'] == 1) {
+    // Si es pública, la empresa le debe el costo del envío al chofer/empresa de transporte
+    // Aquí podrías insertar en una tabla de 'cuentas_por_pagar_transportistas'
+    
+    $monto_a_pagar = $trans_info['costo_envio_fijo'];
+    
+    // Ejemplo simple:
+    // INSERT INTO deudas_transportadora (empresa_id, transportadora_id, pedido_id, monto) ...
+}
 
 // Default
 header("Location: index.php?ruta=portal/dashboard");

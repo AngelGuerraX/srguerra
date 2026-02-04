@@ -12,8 +12,15 @@
     <hr class="border-secondary opacity-50">
 
     <?php 
-    // Capturar ruta actual para marcar activo
+    // Capturar ruta actual
     $ruta_actual = $_GET['ruta'] ?? 'dashboard';
+    
+    // DEFINIR ROLES (Lógica de Permisos)
+    $rol = $_SESSION['rol'] ?? '';
+    $es_admin    = in_array($rol, ['SuperAdmin', 'Admin']); 
+    $es_vendedor = ($rol == 'Vendedor');
+    $es_almacen  = ($rol == 'Almacen');
+    $es_super    = ($rol == 'SuperAdmin');
     ?>
 
     <ul class="nav nav-pills flex-column mb-auto" style="position: relative; z-index: 1060;">
@@ -23,17 +30,24 @@
                 <i class="fas fa-tachometer-alt me-2 text-center" style="width: 25px;"></i> Dashboard
             </a>
         </li>
+
+        <?php if ($es_admin || $es_vendedor || $es_almacen): ?>
         <li class="nav-item">
-            <a href="index.php?ruta=pedidos" class="nav-link <?php echo (strpos($ruta_actual, 'pedidos') !== false) ? 'active' : ''; ?>">
+            <a href="index.php?ruta=pedidos" class="nav-link <?php echo (strpos($ruta_actual, 'pedidos') !== false && strpos($ruta_actual, 'despacho') === false) ? 'active' : ''; ?>">
                 <i class="fas fa-box me-2 text-center" style="width: 25px;"></i> Pedidos
             </a>
         </li>        
+        <?php endif; ?>
+
+        <?php if ($es_admin || $es_almacen): ?>
         <li class="nav-item">
-            <a href="index.php?ruta=pedidos/despacho" class="nav-link text-white">
-                <i class="fas fa-dolly me-2"></i> Despacho Masivo
+            <a href="index.php?ruta=pedidos/despacho" class="nav-link text-white <?php echo (strpos($ruta_actual, 'despacho') !== false) ? 'active' : ''; ?>">
+                <i class="fas fa-dolly me-2 text-center" style="width: 25px;"></i> Despacho Masivo
             </a>
         </li>    
-           
+        <?php endif; ?>
+            
+        <?php if ($es_admin || $es_almacen): ?>
         <li class="nav-item"> 
             <a href="index.php?ruta=inventario" class="nav-link <?php echo ($ruta_actual == 'inventario') ? 'active' : ''; ?>">
                 <i class="fas fa-boxes me-2 text-center" style="width: 25px;"></i> Inventario
@@ -44,88 +58,81 @@
                 <i class="fas fa-warehouse me-2 text-center" style="width: 25px;"></i> Almacenes
             </a>
         </li>
+        <?php endif; ?>
+
+        <?php if ($es_admin || $es_almacen): ?>
         <li class="nav-item">        
             <a href="index.php?ruta=transportadoras" class="nav-link <?php echo ($ruta_actual == 'transportadoras') ? 'active' : ''; ?>">
                 <i class="fas fa-shipping-fast me-2 text-center" style="width: 25px;"></i> Transportadoras
             </a>
         </li> 
         <li class="nav-item">
+            <a href="index.php?ruta=transportadoras/pagos" class="nav-link text-white">
+                <i class="fas fa-money-check-alt me-2"></i> Liquidaciones
+            </a>
+        </li>
+        <li class="nav-item">
             <a href="index.php?ruta=logistica" class="nav-link <?php echo ($ruta_actual == 'logistica') ? 'active' : ''; ?>">
                 <i class="fas fa-map-marked-alt me-2 text-center" style="width: 25px;"></i> Rutas
             </a>
         </li>
+        <?php endif; ?>
+
+        <?php if ($es_admin || $es_vendedor): ?>
         <li class="nav-item">
             <a class="nav-link <?php echo ($ruta_actual == 'clientes') ? 'active' : ''; ?>" href="index.php?ruta=clientes">
                 <i class="fas fa-users me-2 text-center" style="width: 25px;"></i> Clientes
             </a>
         </li>
+        <?php endif; ?>
 
-        <li class="nav-item mb-2">
+        <?php if ($es_admin): ?>
+        <li class="nav-item mb-2 mt-2">
             <a href="#finanzasSubmenu" data-bs-toggle="collapse" class="nav-link text-white align-middle px-0">
-                <i class="fs-4 fas fa-hand-holding-usd text-warning"></i> <span class="ms-1 d-none d-sm-inline">Finanzas</span>
+                <i class="fs-4 fas fa-hand-holding-usd text-warning text-center" style="width: 25px;"></i> <span class="ms-1">Finanzas</span>
             </a>
-            <ul class="collapse nav flex-column ms-1" id="finanzasSubmenu" data-bs-parent="#menu">
+            <ul class="collapse nav flex-column ms-3 ps-2 border-start border-secondary" id="finanzasSubmenu" data-bs-parent="#menu">
                 
-                <li class="w-100">
-                    <a href="index.php?ruta=finanzas" class="nav-link px-0 text-white-50"> 
+                <li class="nav-item w-100">
+                    <a href="index.php?ruta=finanzas" class="nav-link px-0 text-white-50 <?php echo ($ruta_actual == 'finanzas') ? 'text-white fw-bold' : ''; ?>"> 
                         <i class="fas fa-file-invoice me-2"></i> Reporte General
                     </a>
                 </li>
 
-                <li class="w-100">
-                    <a href="index.php?ruta=finanzas/gastos" class="nav-link px-0 text-white-50">
+                <li class="nav-item w-100">
+                    <a href="index.php?ruta=finanzas/gastos" class="nav-link px-0 text-white-50 <?php echo ($ruta_actual == 'finanzas/gastos') ? 'text-white fw-bold' : ''; ?>">
                         <i class="fas fa-receipt me-2"></i> Registrar Gastos
                     </a>
                 </li>
 
-                <li class="w-100">
-                    <a href="index.php?ruta=finanzas/rentabilidad" class="nav-link px-0 text-warning fw-bold">
+                <li class="nav-item w-100">
+                    <a href="index.php?ruta=finanzas/rentabilidad" class="nav-link px-0 text-warning fw-bold <?php echo ($ruta_actual == 'finanzas/rentabilidad') ? 'text-white' : ''; ?>">
                         <i class="fas fa-chart-pie me-2"></i> Rentabilidad / CPA
                     </a>
                 </li>
 
             </ul>
         </li> 
-
-        <span class="px-3 h-label mb-2 mt-4 text-white-50 small fw-bold">NEGOCIO</span>
-
-        <li class="nav-item">
-            <a href="index.php?ruta=finanzas" class="nav-link <?php echo ($ruta_actual == 'finanzas') ? 'active' : ''; ?>">
-                <i class="fas fa-chart-line me-2 text-center" style="width: 25px;"></i> Finanzas Global
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="index.php?ruta=finanzas/productos" class="nav-link <?php echo ($ruta_actual == 'finanzas/productos') ? 'active' : ''; ?>">
-                <i class="fas fa-tags me-2 text-center" style="width: 25px;"></i> Rentabilidad Prod.
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="index.php?ruta=finanzas/gastos" class="nav-link <?php echo ($ruta_actual == 'finanzas/gastos') ? 'active' : ''; ?>">
-                <i class="fas fa-file-invoice-dollar me-2 text-center" style="width: 25px;"></i> Gastos
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="index.php?ruta=marketing" class="nav-link <?php echo ($ruta_actual == 'marketing') ? 'active' : ''; ?>">
-                <i class="fab fa-facebook me-2 text-center" style="width: 25px;"></i> Marketing Ads
-            </a>
-        </li>
-</li>
+        <?php endif; ?>
 
         <hr class="border-secondary opacity-50 my-3">
 
+        <?php if ($es_admin): ?>
         <li class="nav-item">
             <a class="nav-link text-warning <?php echo ($ruta_actual == 'configuracion') ? 'active' : ''; ?>" href="index.php?ruta=configuracion">
                 <i class="fas fa-cog me-2 text-center" style="width: 25px;"></i> Ajustes
             </a>
         </li>
-        <?php if ($_SESSION['rol'] === 'SuperAdmin'): ?>
-    <hr class="border-secondary opacity-50 my-3">
-    <li class="nav-item">
-        <a class="nav-link text-warning fw-bold <?php echo ($ruta_actual == 'saas') ? 'active' : ''; ?>" href="index.php?ruta=saas">
-            <i class="fas fa-user-astronaut me-2 text-center" style="width: 25px;"></i> Gestión SaaS
-        </a>
-    </li>
-<?php endif; ?>
+        <?php endif; ?>
+
+        <?php if ($es_super): ?>
+        <li class="nav-item">
+            <a class="nav-link text-warning fw-bold border border-warning rounded mt-2 <?php echo ($ruta_actual == 'saas') ? 'active' : ''; ?>" href="index.php?ruta=saas">
+                <i class="fas fa-user-astronaut me-2 text-center" style="width: 25px;"></i> Gestión SaaS
+            </a>
+        </li>
+        <?php endif; ?>
+
     </ul>
 
     <hr class="border-secondary opacity-50">

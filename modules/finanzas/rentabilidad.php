@@ -7,8 +7,7 @@ require 'modules/finanzas/logic_rentabilidad.php';
     
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
-            <span class="h-label text-warning">INTELIGENCIA DE NEGOCIOS</span>
-            <h2 class="fw-bold text-white">Rentabilidad Real & CPA</h2>
+            <h2 class="fw-bold text-white"><i class="fas fa-chart-pie text-warning me-2"></i> Rentabilidad Real & CPA</h2>
         </div>
         
         <form class="d-flex gap-2 bg-dark p-2 rounded border border-secondary">
@@ -30,7 +29,7 @@ require 'modules/finanzas/logic_rentabilidad.php';
                         <input type="hidden" name="guardar_ads" value="1">
                         <div class="input-group mb-2">
                             <span class="input-group-text bg-black border-secondary text-muted">$</span>
-                            <input type="number" step="0.01" name="monto" class="form-control bg-black text-white border-secondary" placeholder="Monto gastado" required>
+                            <input type="number" step="0.01" name="monto" class="form-control bg-black text-white border-secondary" placeholder="Monto" required>
                         </div>
                         <div class="input-group mb-2">
                             <input type="date" name="fecha" value="<?php echo date('Y-m-d'); ?>" class="form-control bg-black text-white border-secondary">
@@ -40,10 +39,10 @@ require 'modules/finanzas/logic_rentabilidad.php';
                                 <option value="Google Ads">Google</option>
                             </select>
                         </div>
-                        <button class="btn btn-outline-info w-100 btn-sm">Guardar Inversión</button>
+                        <button class="btn btn-outline-info w-100 btn-sm">Guardar</button>
                     </form>
-                    <div class="mt-3 pt-3 border-top border-secondary">
-                        <small class="text-muted">Inversión en este periodo:</small>
+                    <div class="mt-3 pt-3 border-top border-secondary text-center">
+                        <small class="text-muted">Inversión Total Periodo</small>
                         <h3 class="text-white fw-bold">RD$ <?php echo number_format($G_ads, 2); ?></h3>
                     </div>
                 </div>
@@ -52,17 +51,17 @@ require 'modules/finanzas/logic_rentabilidad.php';
 
         <div class="col-md-4">
             <div class="card bg-dark border-secondary h-100 text-center py-3">
-                <h6 class="text-muted text-uppercase mb-3">La Realidad del CPA</h6>
+                <h6 class="text-muted text-uppercase mb-3">Costo por Adquisición (CPA)</h6>
                 <div class="row align-items-center h-100">
                     <div class="col-6 border-end border-secondary">
                         <div class="display-6 fw-bold text-white">RD$<?php echo number_format($CPA_marketing, 0); ?></div>
-                        <span class="badge bg-secondary">CPA Marketing</span>
-                        <small class="d-block text-muted mt-2" style="font-size: 10px;">Lo que dice Facebook</small>
+                        <span class="badge bg-secondary">Marketing</span>
+                        <small class="d-block text-muted mt-2" style="font-size: 10px;">Facebook Dice</small>
                     </div>
                     <div class="col-6">
                         <div class="display-6 fw-bold text-warning">RD$<?php echo number_format($CPA_real, 0); ?></div>
-                        <span class="badge bg-warning text-dark">CPA Real</span>
-                        <small class="d-block text-muted mt-2" style="font-size: 10px;">Costo por Venta Cobrada</small>
+                        <span class="badge bg-warning text-dark">Real</span>
+                        <small class="d-block text-muted mt-2" style="font-size: 10px;">Tu Bolsillo Paga</small>
                     </div>
                 </div>
             </div>
@@ -71,58 +70,18 @@ require 'modules/finanzas/logic_rentabilidad.php';
         <div class="col-md-4">
             <div class="card bg-danger bg-opacity-10 border-danger h-100 text-center py-3">
                 <h6 class="text-danger text-uppercase mb-1">Dinero "Quemado"</h6>
-                <small class="text-danger opacity-75">Ads en pedidos fallidos + Envíos de devoluciones</small>
+                <small class="text-danger opacity-75">Ads en fallidos + Envíos perdidos</small>
                 <div class="display-5 fw-bold text-danger mt-2">RD$ <?php echo number_format($total_quemado, 0); ?></div>
                 <div class="progress mt-3 mx-4" style="height: 6px;">
                     <?php $porc_quemado = ($ventas_cobradas > 0) ? ($total_quemado / $ventas_cobradas) * 100 : 0; ?>
                     <div class="progress-bar bg-danger" style="width: <?php echo min(100, $porc_quemado); ?>%"></div>
                 </div>
-                <small class="text-muted mt-1"><?php echo number_format($porc_quemado, 1); ?>% de tus ventas se van en desperdicio</small>
+                <small class="text-muted mt-1"><?php echo number_format($porc_quemado, 1); ?>% de ineficiencia</small>
             </div>
         </div>
     </div>
 
-    <h5 class="text-white fw-bold mb-3"><i class="fas fa-filter me-2"></i> Análisis del Embudo</h5>
-    <div class="row g-2 mb-4 text-white text-center">
-        
-        <div class="col">
-            <div class="p-3 rounded border border-secondary" style="background: #2c3e50;">
-                <h4 class="fw-bold m-0"><?php echo $stats['Total']; ?></h4>
-                <small class="text-muted">Pedidos Totales</small>
-                <div class="mt-2 text-info small">100%</div>
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="p-3 rounded border border-secondary" style="background: #34495e;">
-                <h4 class="fw-bold m-0 text-info"><?php echo $stats['En Ruta'] + $stats['Confirmado'] + $stats['Nuevo']; ?></h4>
-                <small class="text-muted">En Proceso</small>
-                <div class="mt-2 text-info small">Riesgo Latente</div>
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="p-3 rounded border border-danger bg-danger bg-opacity-10">
-                <h4 class="fw-bold m-0 text-danger"><?php echo $stats['Devuelto'] + $stats['Rechazado'] + $stats['Cancelado']; ?></h4>
-                <small class="text-danger">Fallidos</small>
-                <div class="mt-2 text-danger small">
-                    Pérdida Logística: RD$ <?php echo number_format($desperdicio_logistica, 0); ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="p-3 rounded border border-success bg-success bg-opacity-10">
-                <h4 class="fw-bold m-0 text-success"><?php echo $stats['Entregado']; ?></h4>
-                <small class="text-success">Cobrados</small>
-                <div class="mt-2 text-success fw-bold small">
-                    Tasa de Éxito: <?php echo number_format($tasa_entrega, 1); ?>%
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card bg-black border border-secondary">
+    <div class="card bg-black border border-secondary mb-4">
         <div class="card-header border-secondary fw-bold text-white">
             <i class="fas fa-calculator me-2"></i> Resultado Neto (Matemática Cerrada)
         </div>
@@ -155,5 +114,4 @@ require 'modules/finanzas/logic_rentabilidad.php';
             </table>
         </div>
     </div>
-
 </div>

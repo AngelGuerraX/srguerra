@@ -25,10 +25,23 @@
                     </div>
                     <div class="form-text text-muted small">Este costo se asignará automáticamente a los pedidos nuevos.</div>
                 </div>
+<?php if($_SESSION['rol'] == 'SuperAdmin'): ?>
+    <div class="card bg-warning bg-opacity-10 border-warning mb-3">
+        <div class="card-body">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="es_publica" value="1" id="checkPublica">
+                <label class="form-check-label fw-bold text-warning" for="checkPublica">
+                    <i class="fas fa-globe me-2"></i> Transportadora Pública (Global)
+                </label>
+            </div>
+            <small class="text-white-50">
+                Si activas esto, <strong>TODAS</strong> las empresas registradas en el sistema podrán ver y asignarle pedidos a este chofer.
+            </small>
+        </div>
+    </div>
+<?php endif; ?>
 
-                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow">
-                    <i class="fas fa-save me-2"></i> Guardar Transportadora
-                </button>
+<button type="submit" class="btn btn-primary w-100">Guardar Transportadora</button>
             </form>
         </div>
     </div>

@@ -33,7 +33,9 @@ if (!$pedido) {
 }
 
 // 3. Obtener Listas para los Dropdowns
-$lista_trans = $pdo->query("SELECT * FROM transportadoras WHERE empresa_id = $empresa_id AND activo = 1")->fetchAll();
+$lista_trans = $pdo->query("SELECT * FROM transportadoras 
+        WHERE (empresa_id = $empresa_id OR es_publica = 1) 
+        AND activo = 1")->fetchAll();
 $lista_alm = $pdo->query("SELECT * FROM almacenes WHERE empresa_id = $empresa_id AND activo = 1")->fetchAll();
 
 // 4. Obtener Detalles
@@ -92,7 +94,7 @@ $detalles = $stmt_det->fetchAll();
                     </select>
                 </div>
                     <?php if(!empty($pedido['motivo_rechazo'])): ?>
-                        <div class="alert alert-warning mt-2 p-2 small border-warning text-dark">
+                        <div class="alert alert-warning mt-2 p-2 small border-warning text-white">
                             <i class="fas fa-exclamation-circle me-1"></i> <strong>Motivo Rechazo:</strong> <?php echo $pedido['motivo_rechazo']; ?>
                         </div>
                     <?php endif; ?>

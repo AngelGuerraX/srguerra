@@ -36,7 +36,7 @@ if(!$p) echo "<script>window.location='index.php?ruta=portal/dashboard';</script
 </head>
 <body>
     <div class="container py-3">
-        <a href="index.php?ruta=portal/dashboard" class="text-decoration-none text-muted mb-3 d-flex align-items-center">
+        <a href="index.php?ruta=portal/dashboard" class="text-decoration-none text-white mb-3 d-flex align-items-center">
             <i class="fas fa-arrow-left me-2"></i> Volver a la ruta
         </a>
         
@@ -62,7 +62,7 @@ if(!$p) echo "<script>window.location='index.php?ruta=portal/dashboard';</script
                         <i class="fas fa-map-marker-alt text-danger me-3 mt-1"></i>
                         <div>
                             <span class="text-white d-block"><?php echo $p['direccion']; ?></span>
-                            <span class="text-muted small"><?php echo $p['ciudad']; ?></span>
+                            <span class="text-white small"><?php echo $p['ciudad']; ?></span>
                         </div>
                     </div>
                 </div>
@@ -82,7 +82,7 @@ if(!$p) echo "<script>window.location='index.php?ruta=portal/dashboard';</script
             </div>
         </div>
 
-        <h6 class="text-muted text-center mb-3 small text-uppercase ls-1">Acciones de Entrega</h6>
+        <h6 class="text-white text-center mb-3 small text-uppercase ls-1">Acciones de Entrega</h6>
         
         <form action="index.php?ruta=portal/logic" method="POST" class="mb-3" onsubmit="return confirm('¿Confirmas que recibiste el dinero y entregaste el paquete?');">
             <input type="hidden" name="action" value="marcar_entregado">

@@ -94,6 +94,9 @@ $empresas = $pdo->query($sql)->fetchAll();
                                 </a>
                             <?php endif; ?>
                             <button class="btn btn-sm btn-outline-info"><i class="fas fa-edit"></i></button>
+                            <a href="index.php?ruta=saas/usuarios&id=<?php echo $e['id']; ?>" class="btn btn-sm btn-outline-warning" title="Gestionar Usuarios">
+    <i class="fas fa-users"></i>
+</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
